@@ -623,7 +623,7 @@ function getDetails(osm_id, osm_type, typeAddress) {
                             var summary = route.summary;
                             let totalTimeInMinutes = Math.round(summary.totalTime / 60); // Переводим время из секунд в минуты
                             console.log('Total distance is ' + summary.totalDistance / 1000 + ' km and total time is ' + totalTimeInMinutes + ' minutes');
-                            document.getElementById("info-container").style.display = "block";
+                            document.getElementById("info-container").style.display = "flex";
                             document.getElementById("distance").innerText = `${summary.totalDistance / 1000} км`;
                             document.getElementById("time").innerText = `${totalTimeInMinutes} минут`;
                         });
