@@ -221,14 +221,15 @@ if(isset($_POST['GTime'])) {
         background-color: #e9e9e9;
     }
 </style>
-<main id="map">
+<main>
+    <div id="map"></div>
     <div id="info-container" style="display: none">
         <div id="distance-box">
-            <h3>Расстояние</h3>
+            <h3>Расстояние:</h3>
             <p id="distance">0 км</p>
         </div>
         <div id="time-box">
-            <h3>Время</h3>
+            <h3>Время:</h3>
             <p id="time">0 минут</p>
         </div>
     </div>
