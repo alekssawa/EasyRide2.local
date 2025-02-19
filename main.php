@@ -49,6 +49,7 @@ if(isset($_POST['GTime'])) {
     $selectedTariff = $_POST['selectedTariff'];
     $GStartAddress = $_POST['GStartAddress'];
     $GEndAddress = $_POST['GEndAddress'];
+    $TotalDistance = $_POST['TotalDistance'];
 
 
     $_SESSION['GTime'] = $GTime;
@@ -56,6 +57,7 @@ if(isset($_POST['GTime'])) {
     $_SESSION['selectedTariff'] = $selectedTariff;
     $_SESSION['GStartAddress'] = $GStartAddress;
     $_SESSION['GEndAddress'] = $GEndAddress;
+    $_SESSION['TotalDistance'] = $TotalDistance;
 }
 //session_start();
 //if(isset($_SESSION['selectedTariff'])) {
@@ -338,11 +340,6 @@ if(isset($_POST['GTime'])) {
                         <span class="Arrow" onclick="decrementValue('TimeMin')"><img src="img/cd-down.svg" style="height: 32px; width: 32px" alt=""></span>
                     </div>
                 </div>
-
-
-
-
-
                 <div id="back-button_Time" style="display: none">
                     <button type="button" onclick="TimeShow()">
                         Назад

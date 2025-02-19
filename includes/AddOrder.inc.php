@@ -35,19 +35,13 @@ try {
             if (isset($_SESSION['selectedTariff'])) {echo '<p>' . $_SESSION['selectedTariff'] . '</p>';}else {echo '<p>Variable not set in session</p>'; };
             if (isset($_SESSION['GStartAddress'])) {echo '<p>' . $_SESSION['GStartAddress'] . '</p>';}else {echo '<p>Variable not set in session</p>';};
             if (isset($_SESSION['GEndAddress'])) {echo '<p>' . $_SESSION['GEndAddress'] . '</p>';}else {echo '<p>Variable not set in session</p>';};
+            if (isset($_SESSION['TotalDistance'])) {echo '<p>' . $_SESSION['TotalDistance'] . '</p>';}else {echo '<p>Variable not set in session</p>';};
 
-            $payment_amount = rand(75,500);
+
             $order_status = 'In progress';
-            $sql = "INSERT INTO payments (payment_amount, payment_date_time) VALUES (:amount, :payment_date) RETURNING payment_id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':amount', $payment_amount);
-            $stmt->bindParam(':payment_date', $_SESSION['GTime']);
-            $stmt->execute();
-            $payment_id = $stmt->fetchColumn();
-            echo "ID payment_id: " . $payment_id . "<br>";
 
             $sql = "
-                SELECT tariff_id
+                SELECT tariff_id, tariff_cost_for_basic_2km, tariff_cost_for_additional_km
                 FROM tariffs
                 WHERE tariff_name = :tariff_name;
             ";
@@ -59,9 +53,29 @@ try {
 
             if ($tariff) {
                 echo "ID Тарифа: " . $tariff['tariff_id'] . "<br>";
+                echo "tariff_cost_for_basic_2km: " . $tariff['tariff_cost_for_basic_2km'] . "<br>";
+                echo "tariff_cost_for_additional_km: " . $tariff['tariff_cost_for_additional_km'] . "<br>";
             } else {
                 echo "Тариф с названием ".$_SESSION['selectedTariff']."не найден.";
             }
+
+            if ($_SESSION['TotalDistance'] < 2){
+                $payment_amount = round($tariff['tariff_cost_for_basic_2km'] * 2);
+                echo "TotalCost: " . $payment_amount . "<br>";
+            }else{
+                $TempCost = $_SESSION['TotalDistance'] - 2;
+                $payment_amount = round(($TempCost * $tariff['tariff_cost_for_additional_km'] + $tariff['tariff_cost_for_basic_2km']) * 2);
+                echo "TotalCost: " . $payment_amount . "<br>";
+            }
+
+
+            $sql = "INSERT INTO payments (payment_amount, payment_date_time) VALUES (:amount, :payment_date) RETURNING payment_id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':amount', $payment_amount);
+            $stmt->bindParam(':payment_date', $_SESSION['GTime']);
+            $stmt->execute();
+            $payment_id = $stmt->fetchColumn();
+            echo "ID payment_id: " . $payment_id . "<br>";
 
 //            $sql = "
 //                SELECT drivers.driver_id
@@ -117,6 +131,7 @@ try {
                 // Check if a row was inserted
                 if ($stmt->rowCount() > 0) {
                     echo "Order successfully added.";
+                    echo $_SESSION['TotalDistance'];
                 } else {
                     echo "No rows inserted.";
                 }

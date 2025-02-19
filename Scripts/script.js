@@ -2,6 +2,7 @@ let StreetEn;
 let HouseNumber;
 let GStartAddress;
 let GEndAddress;
+let TotalDistance;
 
 let RoutingPoints = [[], []];
 
@@ -47,7 +48,8 @@ function refrechValue(){
             selectedPaymentType: selectedPaymentType,
             selectedTariff: selectedTariff,
             GStartAddress: GStartAddress,
-            GEndAddress: GEndAddress
+            GEndAddress: GEndAddress,
+            TotalDistance: TotalDistance
         },
         success: function(response) {
             console.log('Variable saved in session');
@@ -589,19 +591,19 @@ function getDetails(osm_id, osm_type, typeAddress) {
                         if (typeAddress === "Start") {
                             GStartAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${streetOsm_id}`;
                             console.log(GStartAddress);
-                            refrechValue()
                             map.setView([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]], 16);
                             marker.setLatLng([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]]);
                             RoutingPoints[0][0] = detailsStreet.geometry.coordinates[1];
                             RoutingPoints[0][1] = detailsStreet.geometry.coordinates[0];
+                            refrechValue()
                         } else {
                             GEndAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${streetOsm_id}`;
                             console.log(GEndAddress);
-                            refrechValue()
                             map.setView([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]], 16);
                             marker.setLatLng([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]]);
                             RoutingPoints[1][0] = detailsStreet.geometry.coordinates[1];
                             RoutingPoints[1][1] = detailsStreet.geometry.coordinates[0];
+                            refrechValue()
                         }
                         let isFull = RoutingPoints.every(row => row.every(cell => cell !== undefined && cell !== null));
 
@@ -621,11 +623,24 @@ function getDetails(osm_id, osm_type, typeAddress) {
                             let bounds = L.latLngBounds(route.coordinates);
                             map.fitBounds(bounds, { padding: [50, 50] });
                             var summary = route.summary;
+                            TotalDistance = (summary.totalDistance / 1000).toFixed(1)
                             let totalTimeInMinutes = Math.round(summary.totalTime / 60); // Переводим время из секунд в минуты
-                            console.log('Total distance is ' + summary.totalDistance / 1000 + ' km and total time is ' + totalTimeInMinutes + ' minutes');
+                            //console.log('Total distance is ' + summary.totalDistance / 1000 + ' km and total time is ' + totalTimeInMinutes + ' minutes');
                             document.getElementById("info-container").style.display = "flex";
-                            document.getElementById("distance").innerText = `${(summary.totalDistance / 1000).toFixed(1)} км`;
+                            document.getElementById("distance").innerText = `${TotalDistance} км`;
                             document.getElementById("time").innerText = `${totalTimeInMinutes} минут`;
+                            refrechValue()
+                            $.ajax({
+                                url: 'main.php',
+                                method: 'POST',
+                                data: { TotalDistance: TotalDistance },
+                                success: function(response) {
+                                    console.log('TotalDistance saved in session');
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('Error occurred:', error);
+                                }
+                            });
                         });
                         }
 
