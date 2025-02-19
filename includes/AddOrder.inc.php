@@ -47,10 +47,10 @@ try {
             echo "ID payment_id: " . $payment_id . "<br>";
 
             $sql = "
-        SELECT tariff_id
-        FROM tariffs
-        WHERE tariff_name = :tariff_name;
-    ";
+                SELECT tariff_id
+                FROM tariffs
+                WHERE tariff_name = :tariff_name;
+            ";
 
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':tariff_name', $_SESSION['selectedTariff']);
@@ -63,15 +63,27 @@ try {
                 echo "Тариф с названием ".$_SESSION['selectedTariff']."не найден.";
             }
 
+//            $sql = "
+//                SELECT drivers.driver_id
+//                FROM drivers
+//                LEFT JOIN orders o ON drivers.driver_id = order_driver_id AND order_order_status = 'In progress'
+//                WHERE order_driver_id IS NULL
+//                ORDER BY drivers.driver_id ASC;
+//            ";
             $sql = "
-    SELECT drivers.driver_id
-    FROM drivers
-    LEFT JOIN orders o ON drivers.driver_id = order_driver_id AND order_order_status = 'In progress'
-    WHERE order_driver_id IS NULL
-    ORDER BY drivers.driver_id ASC;
-";
+                SELECT d.driver_id
+                FROM drivers d
+                LEFT JOIN orders o ON d.driver_id = o.order_driver_id AND o.order_order_status = 'In progress'
+                JOIN cars c ON d.driver_car_id = c.car_id
+                JOIN tariffs t ON c.car_tariff_id = t.tariff_id
+                WHERE o.order_driver_id IS NULL
+                AND t.tariff_id = :order_tariff_id
+                ORDER BY d.driver_id ASC;
+            ";
 
-            $stmt = $pdo->query($sql);
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':order_tariff_id', $tariff['tariff_id'], PDO::PARAM_INT); // Указываем тип данных
+            $stmt->execute();
             $drivers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if (empty($drivers)) {
