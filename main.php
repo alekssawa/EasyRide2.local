@@ -59,6 +59,8 @@ if(isset($_POST['GTime'])) {
     $_SESSION['GEndAddress'] = $GEndAddress;
     $_SESSION['TotalDistance'] = $TotalDistance;
 }
+
+
 //session_start();
 //if(isset($_SESSION['selectedTariff'])) {
 //    $selectedTariff = $_POST['selectedTariff'];

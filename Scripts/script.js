@@ -661,10 +661,10 @@ function getDetails(osm_id, osm_type, typeAddress) {
 }
 
 const map = L.map('map', {
-    scrollWheelZoom: false,  // Отключаем масштабирование с помощью колесика мыши
-    zoomControl: false,      // Убираем кнопки увеличения/уменьшения масштаба
-    dragging: false,         // Отключаем кнопки управления масштабом
-    doubleClickZoom: false
+    //scrollWheelZoom: false,  // Отключаем масштабирование с помощью колесика мыши
+    //zoomControl: false,      // Убираем кнопки увеличения/уменьшения масштаба
+    //dragging: false,         // Отключаем кнопки управления масштабом
+    //doubleClickZoom: false
 }).setView([46.4825, 30.7326], 13);
 
         // Добавляем слой карты OpenStreetMap
@@ -673,3 +673,227 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 const marker = L.marker([0, 0]).addTo(map);
+
+// ../other/boroughs/Khadzhybeiskyi.json
+
+// fetch('../other/boroughs/Khadzhybeiskyi.json')
+//     .then(response => response.json())
+//     .then(data => {
+//         // Фильтруем только полигоны и мультиполигоны
+//         const filteredGeoJSON = {
+//             type: "FeatureCollection",
+//             features: data.features.filter(feature =>
+//                 feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon"
+//             )
+//         };
+//
+//         // Добавляем на карту
+//         L.geoJSON(filteredGeoJSON, {
+//             style: { color: "blue", weight: 2, fillOpacity: 0.3 }
+//         }).addTo(map);
+//     })
+//     .catch(error => console.error("Ошибка загрузки GeoJSON:", error));
+
+// fetch('../other/boroughs/Kyivskyi.json')
+//     .then(response => response.json())
+//     .then(data => {
+//         // Фильтруем только полигоны и мультиполигоны
+//         const filteredGeoJSON = {
+//             type: "FeatureCollection",
+//             features: data.features.filter(feature =>
+//                 feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon"
+//             )
+//         };
+//
+//         // Добавляем на карту
+//         L.geoJSON(filteredGeoJSON, {
+//             style: { color: "orange", weight: 2, fillOpacity: 0.3 }
+//         }).addTo(map);
+//     })
+//     .catch(error => console.error("Ошибка загрузки GeoJSON:", error));
+//
+// fetch('../other/boroughs/Peresypskyi.json')
+//     .then(response => response.json())
+//     .then(data => {
+//         // Фильтруем только полигоны и мультиполигоны
+//         const filteredGeoJSON = {
+//             type: "FeatureCollection",
+//             features: data.features.filter(feature =>
+//                 feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon"
+//             )
+//         };
+//
+//         // Добавляем на карту
+//         L.geoJSON(filteredGeoJSON, {
+//             style: { color: "green", weight: 2, fillOpacity: 0.3 }
+//         }).addTo(map);
+//     })
+//     .catch(error => console.error("Ошибка загрузки GeoJSON:", error));
+//
+// fetch('../other/boroughs/Prymorskyi.json')
+//     .then(response => response.json())
+//     .then(data => {
+//         // Фильтруем только полигоны и мультиполигоны
+//         const filteredGeoJSON = {
+//             type: "FeatureCollection",
+//             features: data.features.filter(feature =>
+//                 feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon"
+//             )
+//         };
+//
+//         // Добавляем на карту
+//         L.geoJSON(filteredGeoJSON, {
+//             style: { color: "purple", weight: 2, fillOpacity: 0.3 }
+//         }).addTo(map);
+//     })
+//     .catch(error => console.error("Ошибка загрузки GeoJSON:", error));
+
+// [out:json];
+// relation(2945922);
+// map_to_area;  // Преобразуем relation в область
+// way(area)["highway"];  // Ищем дороги внутри этой области
+// /*added by auto repair*/
+// (._;>;);
+// /*end of auto repair*/
+// out body;
+
+
+
+// Загружаем водителей через AJAX-запрос
+fetch('other/drivers.json') // Загружаем JSON-файл
+    .then(response => response.json()) // Преобразуем ответ в JSON
+    .then(drivers => {
+        if (!drivers.length) {
+            console.log("Нет свободных водителей.");
+            return;
+        }
+
+        console.log(drivers);
+
+        fetch('../other/boroughs/Roads/Khadzhybeiskyi_Roads.json')
+            .then(response => response.json())
+            .then(roadData => {
+                let roads = roadData.features.filter(feature =>
+                    feature.id.startsWith("way/") &&
+                    feature.geometry.type === "LineString"
+                );
+
+                // Отображаем дороги
+                let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
+                    style: { color: "#00008B", weight: 2 }
+                }).addTo(map);
+
+                // Генерируем случайные точки на дорогах
+                placeRandomPointsOnRoads(roads,drivers[0]);
+            })
+            .catch(error => console.error("Ошибка загрузки дорог:", error));
+
+        fetch('../other/boroughs/Roads/Kyivskyi_Roads.json')
+            .then(response => response.json())
+            .then(roadData => {
+                let roads = roadData.features.filter(feature =>
+                    feature.id.startsWith("way/") &&
+                    feature.geometry.type === "LineString"
+                );
+
+                // Отображаем дороги
+                let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
+                    style: { color: "#8b4800", weight: 2 }
+                }).addTo(map);
+
+                // Генерируем случайные точки на дорогах
+                placeRandomPointsOnRoads(roads,drivers[1]);
+            })
+            .catch(error => console.error("Ошибка загрузки дорог:", error));
+
+        fetch('../other/boroughs/Roads/Peresypskyi_Roads.json')
+            .then(response => response.json())
+            .then(roadData => {
+                let roads = roadData.features.filter(feature =>
+                    feature.id.startsWith("way/") &&
+                    feature.geometry.type === "LineString"
+                );
+
+                // Отображаем дороги
+                let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
+                    style: { color: "#0d4e00", weight: 2 }
+                }).addTo(map);
+
+                // Генерируем случайные точки на дорогах
+                placeRandomPointsOnRoads(roads,drivers[2]);
+            })
+            .catch(error => console.error("Ошибка загрузки дорог:", error));
+
+        fetch('../other/boroughs/Roads/Prymorskyi_Roads.json')
+            .then(response => response.json())
+            .then(roadData => {
+                let roads = roadData.features.filter(feature =>
+                    feature.id.startsWith("way/") &&
+                    feature.geometry.type === "LineString"
+                );
+
+                // Отображаем дороги
+                let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
+                    style: { color: "#310070", weight: 2 }
+                }).addTo(map);
+
+                // Генерируем случайные точки на дорогах
+                placeRandomPointsOnRoads(roads,drivers[3]);
+            })
+            .catch(error => console.error("Ошибка загрузки дорог:", error));
+
+
+    })
+    .catch(error => console.error("Ошибка загрузки водителей:", error));
+
+
+
+function placeRandomPointsOnRoads(roads,group) {
+    let points = [];
+
+    let numPoints = group.length;
+
+    let drivers = group.slice(0, numPoints); // Получаем только нужное количество водителей
+
+    for (let i = 0; i < numPoints; i++) {
+        let road = roads[Math.floor(Math.random() * roads.length)]; // Выбираем случайную дорогу
+        let coords = road.geometry.coordinates;
+
+        if (coords.length < 2) continue; // Пропускаем, если координат недостаточно
+
+        let segmentIndex = Math.floor(Math.random() * (coords.length - 1)); // Выбираем случайный сегмент
+        let start = coords[segmentIndex];
+        let end = coords[segmentIndex + 1];
+
+        let t = Math.random(); // Случайное значение от 0 до 1
+        let lat = start[1] + t * (end[1] - start[1]);
+        let lng = start[0] + t * (end[0] - start[0]);
+
+        points.push([lat, lng]);
+    }
+
+    // Цвет маркера для отображения группы (можно адаптировать для разных групп)
+    const groupColors = ["red", "blue", "green", "purple"];
+
+    // Добавляем маркеры для водителей
+    points.forEach((point, index) => {
+        let driver = drivers[index];  // Водитель из группы
+        let color = groupColors[index % groupColors.length];  // Выбираем цвет для группы
+
+        L.marker(point, {
+            icon: L.icon({
+                iconUrl: '../img/MarkerCar.png', // Стандартная иконка маркера
+                iconSize: [50, 62], // Размер маркера
+                iconAnchor: [24, 62], // Якорь маркера
+                popupAnchor: [1, -34], // Якори для всплывающего окна
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                shadowSize: [62, 62], // Размер тени
+                shadowAnchor: [24, 62] // Якорь тени
+            })
+        })
+        .addTo(map)
+        .bindPopup(`Driver ID: ${driver.driver_id}, Tariff: ${driver.tariff_name}, Group: ${color}`);
+    });
+}
+
+

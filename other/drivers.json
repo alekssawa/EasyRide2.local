@@ -1,0 +1,58 @@
+[
+    [
+        {
+            "driver_id": 24,
+            "tariff_name": "Delivery"
+        },
+        {
+            "driver_id": 21,
+            "tariff_name": "Standard"
+        },
+        {
+            "driver_id": 16,
+            "tariff_name": "Minibus"
+        }
+    ],
+    [
+        {
+            "driver_id": 19,
+            "tariff_name": "Delivery"
+        },
+        {
+            "driver_id": 20,
+            "tariff_name": "Business"
+        },
+        {
+            "driver_id": 1,
+            "tariff_name": "Minibus"
+        }
+    ],
+    [
+        {
+            "driver_id": 18,
+            "tariff_name": "Standard"
+        },
+        {
+            "driver_id": 3,
+            "tariff_name": "Business"
+        },
+        {
+            "driver_id": 26,
+            "tariff_name": "Comfort"
+        }
+    ],
+    [
+        {
+            "driver_id": 17,
+            "tariff_name": "Standard"
+        },
+        {
+            "driver_id": 22,
+            "tariff_name": "Business"
+        },
+        {
+            "driver_id": 23,
+            "tariff_name": "Comfort"
+        }
+    ]
+]
