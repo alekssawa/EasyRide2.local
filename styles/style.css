@@ -12,6 +12,7 @@ body#main {
     /*background-image: url('../img/map2.png'); !* Замените 'путь_к_вашей_картинке.jpg' на реальный путь к вашей картинке *!*/
     background-size: cover; /* Чтобы изображение занимало всю доступную область */
     background-position: center; /* Чтобы изображение было выровнено по центру */
+    pointer-events: none;
 }
 body#profile {
     padding: 0;
@@ -610,6 +611,7 @@ main {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    pointer-events: none;
 }
 
         

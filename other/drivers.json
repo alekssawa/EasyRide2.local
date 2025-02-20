@@ -9,7 +9,7 @@
             "tariff_name": "Standard"
         },
         {
-            "driver_id": 16,
+            "driver_id": 1,
             "tariff_name": "Minibus"
         }
     ],
@@ -23,22 +23,8 @@
             "tariff_name": "Business"
         },
         {
-            "driver_id": 1,
+            "driver_id": 16,
             "tariff_name": "Minibus"
-        }
-    ],
-    [
-        {
-            "driver_id": 18,
-            "tariff_name": "Standard"
-        },
-        {
-            "driver_id": 3,
-            "tariff_name": "Business"
-        },
-        {
-            "driver_id": 26,
-            "tariff_name": "Comfort"
         }
     ],
     [
@@ -47,11 +33,25 @@
             "tariff_name": "Standard"
         },
         {
-            "driver_id": 22,
+            "driver_id": 3,
             "tariff_name": "Business"
         },
         {
             "driver_id": 23,
+            "tariff_name": "Comfort"
+        }
+    ],
+    [
+        {
+            "driver_id": 18,
+            "tariff_name": "Standard"
+        },
+        {
+            "driver_id": 22,
+            "tariff_name": "Business"
+        },
+        {
+            "driver_id": 26,
             "tariff_name": "Comfort"
         }
     ]
