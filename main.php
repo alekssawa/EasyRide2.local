@@ -251,7 +251,12 @@ if(isset($_POST['GTime'])) {
                 <p id="time2">0 минут</p>
             </div>
         </div>
+        <div class="time-box full-width">
+            <h3>Время поездки:</h3>
+            <p id="time3">0 минут</p>
+        </div>
     </div>
+
 
         <form id="booking-form" action="/includes/AddOrder.inc.php" method="POST">
             <div class="s4">

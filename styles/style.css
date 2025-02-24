@@ -1305,15 +1305,20 @@ TariffText-containerS b.costTariffS2 {
     position: absolute;
     top: 235px;
     left: 800px;
-    display: flex;
-    gap: 20px;  /* Расстояние между колонками */
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Две колонки */
+    gap: 5px;  /* Расстояние между колонками */
     z-index: 9999;
 }
 
 .column {
     display: flex;
     flex-direction: column;
-    gap: 10px;  /* Расстояние между блоками внутри колонки */
+    gap: 5px;
+}
+.time-box.full-width {
+    grid-column: span 2; /* Растягиваем на две колонки */
+    text-align: center;
 }
 
 .distance-box, .time-box {

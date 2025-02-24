@@ -4,6 +4,8 @@ let GStartAddress;
 let GEndAddress;
 let TotalDistance;
 
+let TotalRoutingTime;
+
 let driverLocations = [];
 let allPoints = [];
 
@@ -727,9 +729,10 @@ function getDetails(osm_id, osm_type, typeAddress) {
                                     var summary = route.summary;
                                     TotalDistance = (summary.totalDistance / 1000).toFixed(1);
                                     let totalTimeInMinutes = Math.round(summary.totalTime / 60);
-                                    document.getElementById("info-container").style.display = "flex";
+                                    document.getElementById("info-container").style.display = "grid";
                                     document.getElementById("distance1").innerText = `${TotalDistance} км`;
                                     document.getElementById("time1").innerText = `${totalTimeInMinutes} минут`;
+                                    TotalRoutingTime = totalTimeInMinutes;
                                 });
 
                                 // После нахождения маршрута от первой до второй точки
@@ -743,6 +746,8 @@ function getDetails(osm_id, osm_type, typeAddress) {
                                     let totalTimeInMinutes = Math.round(summary.totalTime / 60);
                                     document.getElementById("distance2").innerText = `${TotalDistance} км`;
                                     document.getElementById("time2").innerText = `${totalTimeInMinutes} минут`;
+                                    TotalRoutingTime += totalTimeInMinutes;
+                                    document.getElementById("time3").innerText = `${TotalRoutingTime} минут`;
                                 });
 
                                 refrechValue()
