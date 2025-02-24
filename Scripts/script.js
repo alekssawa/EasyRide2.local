@@ -4,6 +4,11 @@ let GStartAddress;
 let GEndAddress;
 let TotalDistance;
 
+let driverLocations = [];
+let allPoints = [];
+
+let NearestDriver;
+
 let RoutingPoints = [[], []];
 
 let selectedRadioTime = "Now";
@@ -596,6 +601,61 @@ function getDetails(osm_id, osm_type, typeAddress) {
                             RoutingPoints[0][0] = detailsStreet.geometry.coordinates[1];
                             RoutingPoints[0][1] = detailsStreet.geometry.coordinates[0];
                             refrechValue()
+                            console.log([RoutingPoints[0][0], RoutingPoints[0][1]],allPoints);
+
+                            const targetCoordinates = [RoutingPoints[0][0], RoutingPoints[0][1]];
+                            function SearchNearestDriver(targetCoordinates, allPoints, selectedTariff) {
+                                // Функция для вычисления расстояния (формула Хаверсина)
+                                function haversine(coord1, coord2) {
+                                    const R = 6371; // Радиус Земли в километрах
+                                    const lat1 = toRadians(coord1[0]);
+                                    const lon1 = toRadians(coord1[1]);
+                                    const lat2 = toRadians(coord2[0]);
+                                    const lon2 = toRadians(coord2[1]);
+
+                                    const dlat = lat2 - lat1;
+                                    const dlon = lon2 - lon1;
+
+                                    const a = Math.sin(dlat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2;
+                                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+                                    return R * c; // Расстояние в километрах
+                                }
+
+                                // Преобразование градусов в радианы
+                                function toRadians(degrees) {
+                                    return degrees * Math.PI / 180;
+                                }
+
+                                // Находим ближайшего водителя
+                                let closestDriver = null;
+                                let minDistance = Infinity;
+                                let coordinates;
+
+                                allPoints.forEach(driver => {
+                                    if (driver.tariff === selectedTariff) {  // Проверка тарифа
+                                        const distance = haversine(targetCoordinates, driver.coordinates);
+                                        if (distance < minDistance) {
+                                            minDistance = distance;
+                                            closestDriver = driver;
+                                            coordinates = driver.coordinates;
+                                        }
+                                    }
+                                });
+
+                                // Возвращаем ближайшего водителя
+                                return [closestDriver, minDistance, coordinates];
+                            }
+
+                            NearestDriver = SearchNearestDriver(targetCoordinates, allPoints, selectedTariff);
+                            // Выводим результат
+                            if (NearestDriver) {
+                                console.log(`Ближайший водитель ${NearestDriver[0].driver_id}, Расстояние: ${NearestDriver[1].toFixed(2)} км, тариф "${selectedTariff}"`);
+                                console.log(NearestDriver[2][0], NearestDriver[2][1])
+                            } else {
+                                console.log(`Не найдено водителей с тарифом "${selectedTariff}".`);
+                            }
+
                         } else {
                             GEndAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${streetOsm_id}`;
                             console.log(GEndAddress);
@@ -605,54 +665,110 @@ function getDetails(osm_id, osm_type, typeAddress) {
                             RoutingPoints[1][1] = detailsStreet.geometry.coordinates[0];
                             refrechValue()
                         }
-                        let isFull = RoutingPoints.every(row => row.every(cell => cell !== undefined && cell !== null));
+                        let isFull = RoutingPoints.every(row => row.length > 0 && row.every(cell => cell !== undefined && cell !== null && cell !== 0));
 
-                        if (isFull){
+                        if (isFull) {
                             console.log(RoutingPoints);
-                            let control = L.Routing.control({
-                            waypoints: [
-                              L.latLng(RoutingPoints[0][0], RoutingPoints[0][1]),
-                              L.latLng(RoutingPoints[1][0], RoutingPoints[1][1])
-                            ],
-                            routeWhileDragging: true,
-                            showInstructions: false // Убираем маркеры поворотов
-                        }).addTo(map);
 
-                            control.on('routesfound', function (e) {
-                            let route = e.routes[0];
-                            let bounds = L.latLngBounds(route.coordinates);
-                            map.fitBounds(bounds, { padding: [50, 50] });
-                            var summary = route.summary;
-                            TotalDistance = (summary.totalDistance / 1000).toFixed(1)
-                            let totalTimeInMinutes = Math.round(summary.totalTime / 60); // Переводим время из секунд в минуты
-                            //console.log('Total distance is ' + summary.totalDistance / 1000 + ' km and total time is ' + totalTimeInMinutes + ' minutes');
-                            document.getElementById("info-container").style.display = "flex";
-                            document.getElementById("distance").innerText = `${TotalDistance} км`;
-                            document.getElementById("time").innerText = `${totalTimeInMinutes} минут`;
-                            refrechValue()
-                            $.ajax({
-                                url: 'main.php',
-                                method: 'POST',
-                                data: { TotalDistance: TotalDistance },
-                                success: function(response) {
-                                    console.log('TotalDistance saved in session');
-                                },
-                                error: function(xhr, status, error) {
-                                    console.error('Error occurred:', error);
-                                }
-                            });
-                        });
+                            // Координаты ближайшего водителя
+                            let driverCoordinates = NearestDriver ? NearestDriver[2] : null;
+
+                            if (driverCoordinates) {
+                                let nearestDriverPoint = allPoints.find(point => point.driver_id === NearestDriver[0].driver_id);
+                                console.log('nearestDriverPoint', nearestDriverPoint);
+                                console.log('Первая', RoutingPoints[0][0],RoutingPoints[0][1]);
+                                console.log('Вторая', RoutingPoints[1][0],RoutingPoints[1][1]);
+
+                                let allRouteCoordinates = [
+                                        L.latLng(nearestDriverPoint.coordinates[0], nearestDriverPoint.coordinates[1]), // Координаты ближайшего водителя
+                                        L.latLng(RoutingPoints[0][0], RoutingPoints[0][1]),     // Первая точка маршрута
+                                        L.latLng(RoutingPoints[1][0], RoutingPoints[1][1])      // Вторая точка маршрута
+                                    ];
+
+                                    // Маршрут от ближайшего водителя до первой точки маршрута
+                                    let controlDriverToPoint1 = L.Routing.control({
+                                        waypoints: [
+                                            allRouteCoordinates[0], // Координаты ближайшего водителя
+                                            allRouteCoordinates[1]  // Первая точка маршрута
+                                        ],
+                                        routeWhileDragging: true,
+                                        showInstructions: false,
+                                        lineOptions: {
+                                            styles: [{ color: 'green', weight: 3 }] // Цвет маршрута
+                                        },
+                                        createMarker: function() { return null; }
+                                    }).addTo(map);
+
+                                    // Маршрут от первой точки маршрута до второй точки маршрута
+                                    let controlPoint1ToPoint2 = L.Routing.control({
+                                        waypoints: [
+                                            allRouteCoordinates[1], // Первая точка маршрута
+                                            allRouteCoordinates[2]  // Вторая точка маршрута
+                                        ],
+                                        routeWhileDragging: true,
+                                        showInstructions: false,
+                                        lineOptions: {
+                                            styles: [{ color: 'red', weight: 3 }] // Цвет маршрута
+                                        }
+                                    }).addTo(map);
+
+                                    // Обработчик для обновления карты после нахождения маршрута
+                                    function updateMapBounds() {
+                                        let bounds = L.latLngBounds(allRouteCoordinates); // Создаем границы с учетом всех точек маршрута
+                                        map.fitBounds(bounds, { padding: [50, 50] }); // Устанавливаем границы карты с отступом
+                                    }
+
+                                    // После нахождения маршрута водителя до первой точки
+                                    controlDriverToPoint1.on('routesfound', function (e) {
+                                        let route = e.routes[0];
+                                        allRouteCoordinates.push(...route.coordinates); // Добавляем координаты маршрута водителя до первой точки
+                                        updateMapBounds(); // Обновляем границы карты
+
+                                        var summary = route.summary;
+                                        TotalDistance = (summary.totalDistance / 1000).toFixed(1);
+                                        let totalTimeInMinutes = Math.round(summary.totalTime / 60);
+                                        // document.getElementById("info-container").style.display = "flex";
+                                        // document.getElementById("distance").innerText = `${TotalDistance} км`;
+                                        // document.getElementById("time").innerText = `${totalTimeInMinutes} минут`;
+                                    });
+
+                                    // После нахождения маршрута от первой до второй точки
+                                    controlPoint1ToPoint2.on('routesfound', function (e) {
+                                        let route = e.routes[0];
+                                        allRouteCoordinates.push(...route.coordinates); // Добавляем координаты маршрута от первой до второй точки
+                                        updateMapBounds(); // Обновляем границы карты
+
+                                        var summary = route.summary;
+                                        TotalDistance = (summary.totalDistance / 1000).toFixed(1);
+                                        let totalTimeInMinutes = Math.round(summary.totalTime / 60);
+                                        // document.getElementById("info-container").style.display = "flex";
+                                        // document.getElementById("distance").innerText = `${TotalDistance} км`;
+                                        // document.getElementById("time").innerText = `${totalTimeInMinutes} минут`;
+                                    });
+
+                                    refrechValue()
+                                    $.ajax({
+                                        url: 'main.php',
+                                        method: 'POST',
+                                        data: { TotalDistance: TotalDistance },
+                                        success: function(response) {
+                                            console.log('TotalDistance saved in session');
+                                        },
+                                        error: function(xhr, status, error) {
+                                            console.error('Error occurred:', error);
+                                        }
+                                    });
+                            }
                         }
-
-                        return [StreetEn, HouseNumber, streetOsm_id];
-                    })
-
-
-            } else {
-                console.log('Локальное имя улицы не найдено.');
+                    });
             }
 
+            return [StreetEn, HouseNumber, streetOsm_id];
         })
+
+
+
+
         .catch(error => {
             console.error('Ошибка при получении деталей:', error);
         });
@@ -676,90 +792,6 @@ const marker = L.marker([0, 0]).addTo(map);
 
 // ../other/boroughs/Khadzhybeiskyi.json
 
-// fetch('../other/boroughs/Khadzhybeiskyi.json')
-//     .then(response => response.json())
-//     .then(data => {
-//         // Фильтруем только полигоны и мультиполигоны
-//         const filteredGeoJSON = {
-//             type: "FeatureCollection",
-//             features: data.features.filter(feature =>
-//                 feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon"
-//             )
-//         };
-//
-//         // Добавляем на карту
-//         L.geoJSON(filteredGeoJSON, {
-//             style: { color: "blue", weight: 2, fillOpacity: 0.3 }
-//         }).addTo(map);
-//     })
-//     .catch(error => console.error("Ошибка загрузки GeoJSON:", error));
-
-// fetch('../other/boroughs/Kyivskyi.json')
-//     .then(response => response.json())
-//     .then(data => {
-//         // Фильтруем только полигоны и мультиполигоны
-//         const filteredGeoJSON = {
-//             type: "FeatureCollection",
-//             features: data.features.filter(feature =>
-//                 feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon"
-//             )
-//         };
-//
-//         // Добавляем на карту
-//         L.geoJSON(filteredGeoJSON, {
-//             style: { color: "orange", weight: 2, fillOpacity: 0.3 }
-//         }).addTo(map);
-//     })
-//     .catch(error => console.error("Ошибка загрузки GeoJSON:", error));
-//
-// fetch('../other/boroughs/Peresypskyi.json')
-//     .then(response => response.json())
-//     .then(data => {
-//         // Фильтруем только полигоны и мультиполигоны
-//         const filteredGeoJSON = {
-//             type: "FeatureCollection",
-//             features: data.features.filter(feature =>
-//                 feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon"
-//             )
-//         };
-//
-//         // Добавляем на карту
-//         L.geoJSON(filteredGeoJSON, {
-//             style: { color: "green", weight: 2, fillOpacity: 0.3 }
-//         }).addTo(map);
-//     })
-//     .catch(error => console.error("Ошибка загрузки GeoJSON:", error));
-//
-// fetch('../other/boroughs/Prymorskyi.json')
-//     .then(response => response.json())
-//     .then(data => {
-//         // Фильтруем только полигоны и мультиполигоны
-//         const filteredGeoJSON = {
-//             type: "FeatureCollection",
-//             features: data.features.filter(feature =>
-//                 feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon"
-//             )
-//         };
-//
-//         // Добавляем на карту
-//         L.geoJSON(filteredGeoJSON, {
-//             style: { color: "purple", weight: 2, fillOpacity: 0.3 }
-//         }).addTo(map);
-//     })
-//     .catch(error => console.error("Ошибка загрузки GeoJSON:", error));
-
-// [out:json];
-// relation(2945922);
-// map_to_area;  // Преобразуем relation в область
-// way(area)["highway"];  // Ищем дороги внутри этой области
-// /*added by auto repair*/
-// (._;>;);
-// /*end of auto repair*/
-// out body;
-
-
-
-// Загружаем водителей через AJAX-запрос
 fetch('other/drivers.json') // Загружаем JSON-файл
     .then(response => response.json()) // Преобразуем ответ в JSON
     .then(drivers => {
@@ -767,8 +799,8 @@ fetch('other/drivers.json') // Загружаем JSON-файл
             console.log("Нет свободных водителей.");
             return;
         }
-
-        console.log(drivers);
+        driversData = drivers;
+        // console.log(drivers);
 
         fetch('../other/boroughs/Roads/Khadzhybeiskyi_Roads.json')
             .then(response => response.json())
@@ -779,12 +811,12 @@ fetch('other/drivers.json') // Загружаем JSON-файл
                 );
 
                 // Отображаем дороги
-                let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
-                    style: { color: "#00008B", weight: 2 }
-                }).addTo(map);
+                // let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
+                //     style: { color: "#00008B", weight: 2 }
+                // }).addTo(map);
 
                 // Генерируем случайные точки на дорогах
-                placeRandomPointsOnRoads(roads,drivers[0]);
+                placeRandomPointsOnRoads(roads,drivers[0], driversData);
             })
             .catch(error => console.error("Ошибка загрузки дорог:", error));
 
@@ -797,12 +829,12 @@ fetch('other/drivers.json') // Загружаем JSON-файл
                 );
 
                 // Отображаем дороги
-                let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
-                    style: { color: "#8b4800", weight: 2 }
-                }).addTo(map);
+                // let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
+                //     style: { color: "#8b4800", weight: 2 }
+                // }).addTo(map);
 
                 // Генерируем случайные точки на дорогах
-                placeRandomPointsOnRoads(roads,drivers[1]);
+                placeRandomPointsOnRoads(roads,drivers[1], driversData);
             })
             .catch(error => console.error("Ошибка загрузки дорог:", error));
 
@@ -815,12 +847,12 @@ fetch('other/drivers.json') // Загружаем JSON-файл
                 );
 
                 // Отображаем дороги
-                let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
-                    style: { color: "#0d4e00", weight: 2 }
-                }).addTo(map);
+                // let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
+                //     style: { color: "#0d4e00", weight: 2 }
+                // }).addTo(map);
 
                 // Генерируем случайные точки на дорогах
-                placeRandomPointsOnRoads(roads,drivers[2]);
+                placeRandomPointsOnRoads(roads,drivers[2], driversData);
             })
             .catch(error => console.error("Ошибка загрузки дорог:", error));
 
@@ -833,12 +865,12 @@ fetch('other/drivers.json') // Загружаем JSON-файл
                 );
 
                 // Отображаем дороги
-                let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
-                    style: { color: "#310070", weight: 2 }
-                }).addTo(map);
+                // let roadLayer = L.geoJSON({ type: "FeatureCollection", features: roads }, {
+                //     style: { color: "#310070", weight: 2 }
+                // }).addTo(map);
 
                 // Генерируем случайные точки на дорогах
-                placeRandomPointsOnRoads(roads,drivers[3]);
+                placeRandomPointsOnRoads(roads,drivers[3], driversData);
             })
             .catch(error => console.error("Ошибка загрузки дорог:", error));
 
@@ -848,52 +880,125 @@ fetch('other/drivers.json') // Загружаем JSON-файл
 
 
 
-function placeRandomPointsOnRoads(roads,group) {
+function placeRandomPointsOnRoads(roads, group,driversData) {
+    //console.log('driversData: ', driversData);
     let points = [];
-
     let numPoints = group.length;
-
-    let drivers = group.slice(0, numPoints); // Получаем только нужное количество водителей
+    //console.log(numPoints);
+    //console.log(group);
+    let drivers = group.slice(0, numPoints);
 
     for (let i = 0; i < numPoints; i++) {
-        let road = roads[Math.floor(Math.random() * roads.length)]; // Выбираем случайную дорогу
+        let road = roads[Math.floor(Math.random() * roads.length)];
         let coords = road.geometry.coordinates;
+        if (coords.length < 2) continue;
 
-        if (coords.length < 2) continue; // Пропускаем, если координат недостаточно
-
-        let segmentIndex = Math.floor(Math.random() * (coords.length - 1)); // Выбираем случайный сегмент
+        let segmentIndex = Math.floor(Math.random() * (coords.length - 1));
         let start = coords[segmentIndex];
         let end = coords[segmentIndex + 1];
 
-        let t = Math.random(); // Случайное значение от 0 до 1
+        let t = Math.random();
         let lat = start[1] + t * (end[1] - start[1]);
         let lng = start[0] + t * (end[0] - start[0]);
 
+        let driver = drivers[i];
         points.push([lat, lng]);
+
+        let pointObject = {
+            coordinates: [lat, lng],
+            driver_id: driver.driver_id,
+            tariff: driver.tariff_name,
+            marker: null  // Для хранения маркера Leaflet
+        };
+
+        // Добавляем в глобальный массив
+        driverLocations.push({
+            driver_id: driver.driver_id,
+            tariff: driver.tariff_name,
+            coordinates: [lat, lng]
+        });
+
+        allPoints.push(pointObject);
     }
 
-    // Цвет маркера для отображения группы (можно адаптировать для разных групп)
-    const groupColors = ["red", "blue", "green", "purple"];
-
-    // Добавляем маркеры для водителей
     points.forEach((point, index) => {
-        let driver = drivers[index];  // Водитель из группы
-        let color = groupColors[index % groupColors.length];  // Выбираем цвет для группы
-
-        L.marker(point, {
+        let driver = drivers[index];
+        //console.log(driver.driver_id);
+        let pointIndex = allPoints.findIndex(point => point.driver_id === driver.driver_id);
+        let pointObject = allPoints[pointIndex];
+        // console.log(pointObject.driver_id);
+        // console.log("pointObject: ", pointObject);
+        pointObject.marker = L.marker(point, {
             icon: L.icon({
-                iconUrl: '../img/MarkerCar.png', // Стандартная иконка маркера
-                iconSize: [50, 62], // Размер маркера
-                iconAnchor: [24, 62], // Якорь маркера
-                popupAnchor: [1, -34], // Якори для всплывающего окна
+                iconUrl: '../img/MarkerCar.png',
+                iconSize: [50/1.5, 62/1.5],
+                iconAnchor: [24/1.5, 62/1.5],
+                popupAnchor: [1, -34],
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                shadowSize: [62, 62], // Размер тени
-                shadowAnchor: [24, 62] // Якорь тени
+                shadowSize: [62/1.5, 62/1.5],
+                shadowAnchor: [24/1.5, 62/1.5]
             })
         })
         .addTo(map)
-        .bindPopup(`Driver ID: ${driver.driver_id}, Tariff: ${driver.tariff_name}, Group: ${color}`);
+        .bindPopup(`Driver ID: ${pointObject.driver_id}, Tariff: ${pointObject.tariff}`);
     });
+    //console.log(allPoints);
+    //console.log(driverLocations);
 }
 
+console.log(allPoints);
+console.log(driverLocations);
 
+// function getNearestDriverLeaflet(orderLocation, availableDrivers, map) {
+//     if (!Array.isArray(orderLocation) || orderLocation.length !== 2) {
+//         console.error("Ошибка: orderLocation не определена или имеет неверный формат.");
+//         return null;
+//     }
+//
+//     if (!Array.isArray(availableDrivers) || availableDrivers.length === 0) {
+//         console.error("Ошибка: availableDrivers не определён или пуст.");
+//         return null;
+//     }
+//
+//     let nearestDriver = null;
+//     let minDistance = Infinity;
+//
+//     let remainingRequests = availableDrivers.length; // Количество запросов
+//     let distances = []; // Храним результаты
+//
+//     availableDrivers.forEach(driver => {
+//         if (!Array.isArray(driver.coordinates) || driver.coordinates.length !== 2) {
+//             console.warn(`Ошибка в координатах водителя ID ${driver.driver_id}`);
+//             remainingRequests--;
+//             return;
+//         }
+//
+//         // Создаём маршрут без отображения
+//         L.Routing.control({
+//             waypoints: [
+//                 L.latLng(orderLocation[0], orderLocation[1]),  // Точка заказа
+//                 L.latLng(driver.coordinates[0], driver.coordinates[1]) // Точка водителя
+//             ],
+//             createMarker: function () { return null; }, // Убираем маркеры маршрута
+//             routeWhileDragging: false,
+//             show: false,
+//             router: new L.Routing.osrmv1({ profile: 'car' }) // Используем OSRM API (или Mapbox)
+//         }).on('routesfound', function (e) {
+//             let route = e.routes[0];
+//             let distance = route.summary.totalDistance / 1000; // Перевод в километры
+//
+//             distances.push({ driver, distance });
+//
+//             remainingRequests--;
+//
+//             // Когда все запросы завершены, выбираем минимальный маршрут
+//             if (remainingRequests === 0) {
+//                 let nearest = distances.reduce((a, b) => (a.distance < b.distance ? a : b));
+//                 console.log("Ближайший водитель:", nearest.driver, "Расстояние:", nearest.distance, "км");
+//                 nearestDriver = nearest.driver;
+//             }
+//         }).addTo(map);
+//     });
+//
+//     return nearestDriver;
+// }

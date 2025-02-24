@@ -37,6 +37,7 @@ try {
             if (isset($_SESSION['GEndAddress'])) {echo '<p>' . $_SESSION['GEndAddress'] . '</p>';}else {echo '<p>Variable not set in session</p>';};
             if (isset($_SESSION['TotalDistance'])) {echo '<p>' . $_SESSION['TotalDistance'] . '</p>';}else {echo '<p>Variable not set in session</p>';};
 
+            echo $_SESSION['GStartAddress'];
 
             $order_status = 'In progress';
 
@@ -139,7 +140,7 @@ try {
                 echo "Error inserting order: " . implode(":", $stmt->errorInfo());
             }
 
-            header("Location: ../Pages/MyOrder.inc.php");
+            //header("Location: ../Pages/MyOrder.inc.php");
         }
 
     }else {
