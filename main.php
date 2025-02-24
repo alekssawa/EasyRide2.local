@@ -229,28 +229,30 @@ if(isset($_POST['GTime'])) {
     <div id="map"></div>
 
     <section id="booking">
+
     <div id="info-container" style="display: none">
         <div class="column">
             <div class="distance-box">
-                <h3>Расстояние:</h3>
+                <h3>Расстояние до водителя:</h3>
                 <p id="distance1">0 км</p>
             </div>
             <div class="time-box">
-                <h3>Время:</h3>
+                <h3>Время до водителя:</h3>
                 <p id="time1">0 минут</p>
             </div>
         </div>
         <div class="column">
             <div class="distance-box">
-                <h3>Расстояние:</h3>
+                <h3>Расстояние до <br>точки:</h3>
                 <p id="distance2">0 км</p>
             </div>
             <div class="time-box">
-                <h3>Время:</h3>
+                <h3>Время до точки:</h3>
                 <p id="time2">0 минут</p>
             </div>
         </div>
     </div>
+
         <form id="booking-form" action="/includes/AddOrder.inc.php" method="POST">
             <div class="s4">
                 <h1>Замовлення у м.Одеса</h1>

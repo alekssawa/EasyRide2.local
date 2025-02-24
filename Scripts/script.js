@@ -679,85 +679,84 @@ function getDetails(osm_id, osm_type, typeAddress) {
                                 console.log('Первая', RoutingPoints[0][0],RoutingPoints[0][1]);
                                 console.log('Вторая', RoutingPoints[1][0],RoutingPoints[1][1]);
 
+                                // Обработчик для обновления карты после нахождения маршрута
+                                function updateMapBounds() {
+                                    let bounds = L.latLngBounds(allRouteCoordinates); // Создаем границы с учетом всех точек маршрута
+                                    map.fitBounds(bounds, { padding: [50, 50] }); // Устанавливаем границы карты с отступом
+                                }
+
                                 let allRouteCoordinates = [
                                         L.latLng(nearestDriverPoint.coordinates[0], nearestDriverPoint.coordinates[1]), // Координаты ближайшего водителя
                                         L.latLng(RoutingPoints[0][0], RoutingPoints[0][1]),     // Первая точка маршрута
                                         L.latLng(RoutingPoints[1][0], RoutingPoints[1][1])      // Вторая точка маршрута
-                                    ];
+                                ];
 
-                                    // Маршрут от ближайшего водителя до первой точки маршрута
-                                    let controlDriverToPoint1 = L.Routing.control({
-                                        waypoints: [
-                                            allRouteCoordinates[0], // Координаты ближайшего водителя
-                                            allRouteCoordinates[1]  // Первая точка маршрута
-                                        ],
-                                        routeWhileDragging: true,
-                                        showInstructions: false,
-                                        lineOptions: {
-                                            styles: [{ color: 'green', weight: 3 }] // Цвет маршрута
-                                        },
-                                        createMarker: function() { return null; }
-                                    }).addTo(map);
+                                // Маршрут от ближайшего водителя до первой точки маршрута
+                                let controlDriverToPoint1 = L.Routing.control({
+                                    waypoints: [
+                                        allRouteCoordinates[0], // Координаты ближайшего водителя
+                                        allRouteCoordinates[1]  // Первая точка маршрута
+                                    ],
+                                    routeWhileDragging: true,
+                                    showInstructions: false,
+                                    lineOptions: {
+                                        styles: [{ color: 'green', weight: 3 }] // Цвет маршрута
+                                    },
+                                    createMarker: function() { return null; }
+                                }).addTo(map);
 
-                                    // Маршрут от первой точки маршрута до второй точки маршрута
-                                    let controlPoint1ToPoint2 = L.Routing.control({
-                                        waypoints: [
-                                            allRouteCoordinates[1], // Первая точка маршрута
-                                            allRouteCoordinates[2]  // Вторая точка маршрута
-                                        ],
-                                        routeWhileDragging: true,
-                                        showInstructions: false,
-                                        lineOptions: {
-                                            styles: [{ color: 'red', weight: 3 }] // Цвет маршрута
-                                        }
-                                    }).addTo(map);
-
-                                    // Обработчик для обновления карты после нахождения маршрута
-                                    function updateMapBounds() {
-                                        let bounds = L.latLngBounds(allRouteCoordinates); // Создаем границы с учетом всех точек маршрута
-                                        map.fitBounds(bounds, { padding: [50, 50] }); // Устанавливаем границы карты с отступом
+                                // Маршрут от первой точки маршрута до второй точки маршрута
+                                let controlPoint1ToPoint2 = L.Routing.control({
+                                    waypoints: [
+                                        allRouteCoordinates[1], // Первая точка маршрута
+                                        allRouteCoordinates[2]  // Вторая точка маршрута
+                                    ],
+                                    routeWhileDragging: true,
+                                    showInstructions: false,
+                                    lineOptions: {
+                                        styles: [{ color: 'red', weight: 3 }] // Цвет маршрута
                                     }
+                                }).addTo(map);
 
-                                    // После нахождения маршрута водителя до первой точки
-                                    controlDriverToPoint1.on('routesfound', function (e) {
-                                        let route = e.routes[0];
-                                        allRouteCoordinates.push(...route.coordinates); // Добавляем координаты маршрута водителя до первой точки
-                                        updateMapBounds(); // Обновляем границы карты
+                                // После нахождения маршрута водителя до первой точки
+                                controlDriverToPoint1.on('routesfound', function (e) {
+                                    let route = e.routes[0];
+                                    allRouteCoordinates.push(...route.coordinates); // Добавляем координаты маршрута водителя до первой точки
+                                    updateMapBounds(); // Обновляем границы карты
 
-                                        var summary = route.summary;
-                                        TotalDistance = (summary.totalDistance / 1000).toFixed(1);
-                                        let totalTimeInMinutes = Math.round(summary.totalTime / 60);
-                                        // document.getElementById("info-container").style.display = "flex";
-                                        // document.getElementById("distance").innerText = `${TotalDistance} км`;
-                                        // document.getElementById("time").innerText = `${totalTimeInMinutes} минут`;
-                                    });
+                                    var summary = route.summary;
+                                    TotalDistance = (summary.totalDistance / 1000).toFixed(1);
+                                    let totalTimeInMinutes = Math.round(summary.totalTime / 60);
+                                    document.getElementById("info-container").style.display = "flex";
+                                    document.getElementById("distance1").innerText = `${TotalDistance} км`;
+                                    document.getElementById("time1").innerText = `${totalTimeInMinutes} минут`;
+                                });
 
-                                    // После нахождения маршрута от первой до второй точки
-                                    controlPoint1ToPoint2.on('routesfound', function (e) {
-                                        let route = e.routes[0];
-                                        allRouteCoordinates.push(...route.coordinates); // Добавляем координаты маршрута от первой до второй точки
-                                        updateMapBounds(); // Обновляем границы карты
+                                // После нахождения маршрута от первой до второй точки
+                                controlPoint1ToPoint2.on('routesfound', function (e) {
+                                    let route = e.routes[0];
+                                    allRouteCoordinates.push(...route.coordinates); // Добавляем координаты маршрута от первой до второй точки
+                                    updateMapBounds(); // Обновляем границы карты
 
-                                        var summary = route.summary;
-                                        TotalDistance = (summary.totalDistance / 1000).toFixed(1);
-                                        let totalTimeInMinutes = Math.round(summary.totalTime / 60);
-                                        // document.getElementById("info-container").style.display = "flex";
-                                        // document.getElementById("distance").innerText = `${TotalDistance} км`;
-                                        // document.getElementById("time").innerText = `${totalTimeInMinutes} минут`;
-                                    });
+                                    var summary = route.summary;
+                                    TotalDistance = (summary.totalDistance / 1000).toFixed(1);
+                                    let totalTimeInMinutes = Math.round(summary.totalTime / 60);
+                                    document.getElementById("distance2").innerText = `${TotalDistance} км`;
+                                    document.getElementById("time2").innerText = `${totalTimeInMinutes} минут`;
+                                });
 
-                                    refrechValue()
-                                    $.ajax({
-                                        url: 'main.php',
-                                        method: 'POST',
-                                        data: { TotalDistance: TotalDistance },
-                                        success: function(response) {
-                                            console.log('TotalDistance saved in session');
-                                        },
-                                        error: function(xhr, status, error) {
-                                            console.error('Error occurred:', error);
-                                        }
-                                    });
+                                refrechValue()
+                                $.ajax({
+                                    url: 'main.php',
+                                    method: 'POST',
+                                    data: { TotalDistance: TotalDistance },
+                                    success: function(response) {
+                                        console.log('TotalDistance saved in session');
+                                    },
+                                    error: function(xhr, status, error) {
+                                        console.error('Error occurred:', error);
+                                    }
+                                });
                             }
                         }
                     });
