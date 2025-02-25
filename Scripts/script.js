@@ -549,7 +549,7 @@ function checkAddress(input, typeAddress) {
                 suggestion.classList.add('autocomplete-suggestion');
                 suggestion.textContent = item.display_name;
                 suggestion.onclick = () => {
-                    //alert(item.osm_id);
+                    console.log(item.osm_id);
                     getDetails(item.osm_id, item.osm_type, typeAddress);
 
 
@@ -580,6 +580,7 @@ function getDetails(osm_id, osm_type, typeAddress) {
     fetch(`https://nominatim.openstreetmap.org/details.php?osmtype=${osmType}&osmid=${osm_id}&addressdetails=1&format=json`)
         .then(response => response.json())
         .then(details => {
+            console.log(osm_id);
             //console.log(details);
             HouseNumber = details.addresstags.housenumber;
             //console.log(HouseNumber);
@@ -592,11 +593,12 @@ function getDetails(osm_id, osm_type, typeAddress) {
                 fetch(`https://nominatim.openstreetmap.org/details.php?osmtype=W&osmid=${streetOsm_id}&format=json`)
                     .then(response => response.json())
                     .then(detailsStreet => {
+                        console.log(osm_id);
                         StreetEn = detailsStreet.names['name:en']
                         //console.log(StreetEn);
                         console.log(detailsStreet.geometry.coordinates)
                         if (typeAddress === "Start") {
-                            GStartAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${streetOsm_id}`;
+                            GStartAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${osm_id}`;
                             console.log(GStartAddress);
                             map.setView([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]], 16);
                             marker.setLatLng([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]]);
@@ -659,7 +661,7 @@ function getDetails(osm_id, osm_type, typeAddress) {
                             }
 
                         } else {
-                            GEndAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${streetOsm_id}`;
+                            GEndAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${osm_id}`;
                             console.log(GEndAddress);
                             map.setView([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]], 16);
                             marker.setLatLng([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]]);
