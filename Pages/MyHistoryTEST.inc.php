@@ -98,6 +98,11 @@ $orders = [
 
 <div class="container">
     <?php foreach ($orders as $order): ?>
+        <script>
+            console.log(<?= json_encode($order['start_location'], JSON_UNESCAPED_UNICODE) ?>);
+            getDetails2(<?= json_encode($order['start_location'], JSON_UNESCAPED_UNICODE) ?>);
+
+        </script>
         <div class="order" onclick="toggleDetails(this)">
             <div class="order-header">
                 <div class="route">
@@ -118,17 +123,16 @@ $orders = [
 </div>
 
 <script>
-    console.log($order['start_location']);
 
-    fetch(`https://nominatim.openstreetmap.org/details.php?osmtype=W&osmid=1223544492&addressdetails=1&format=json`)
-        .then(response => response.json())
-        .then(details => {
-            console.log(details.names["name:uk"]);
-            console.log(details);
-        })
-        .catch(error => {
-            console.error('Ошибка при получении деталей:', error);
-        });
+    // fetch(`https://nominatim.openstreetmap.org/details.php?osmtype=W&osmid=1223544492&addressdetails=1&format=json`)
+    //     .then(response => response.json())
+    //     .then(details => {
+    //         console.log(details.names["name:uk"]);
+    //         console.log(details);
+    //     })
+    //     .catch(error => {
+    //         console.error('Ошибка при получении деталей:', error);
+    //     });
 
     function toggleDetails(orderElement) {
         const details = orderElement.querySelector('.order-details');

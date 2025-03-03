@@ -594,11 +594,12 @@ function getDetails(osm_id, osm_type, typeAddress) {
                     .then(response => response.json())
                     .then(detailsStreet => {
                         console.log(osm_id);
+                        console.log(streetOsm_id);
                         StreetEn = detailsStreet.names['name:en']
                         //console.log(StreetEn);
                         console.log(detailsStreet.geometry.coordinates)
                         if (typeAddress === "Start") {
-                            GStartAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${osm_id}`;
+                            GStartAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${osm_id}-${streetOsm_id}`;
                             console.log(GStartAddress);
                             map.setView([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]], 16);
                             marker.setLatLng([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]]);
@@ -661,7 +662,7 @@ function getDetails(osm_id, osm_type, typeAddress) {
                             }
 
                         } else {
-                            GEndAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${osm_id}`;
+                            GEndAddress = `${StreetEn}-${HouseNumber}-Odessa-Ukraine-${osm_id}-${streetOsm_id}`;
                             console.log(GEndAddress);
                             map.setView([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]], 16);
                             marker.setLatLng([detailsStreet.geometry.coordinates[1], detailsStreet.geometry.coordinates[0]]);

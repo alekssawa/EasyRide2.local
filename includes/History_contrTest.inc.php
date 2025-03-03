@@ -4,6 +4,7 @@ try {
     require_once '../includes/login_model.inc.php';
     require_once '../includes/login_contr.inc.php';
 
+
     if (!isset($pdo)) {
         echo ("ERROR DATABASE CONNECTION");
     }
@@ -20,6 +21,8 @@ try {
         $stmt->execute();
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        echo '<script src="../Scripts/test2.js"></script>';
+//        echo '<script>getDetails2()</script>';
 
 
     } elseif ($_SESSION["user_status"] == "Driver"){
