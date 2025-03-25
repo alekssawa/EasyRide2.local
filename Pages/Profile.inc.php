@@ -112,7 +112,7 @@ require_once "../includes/signup.view.inc.php";
         <?php } ?>
         <div class="info-item info-row">
             <div class="info-detail">
-                <span class="info-label">ФИО:</span> <?php output_pib();?>
+                <span class="info-label">ФИО:</span>&nbsp; <?php output_pib();?>
             </div>
             <?php if($_SESSION["user_status"] == "Driver"){ ?>
             <div class="rating-container">

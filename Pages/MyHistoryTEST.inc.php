@@ -84,10 +84,12 @@ $orders = [
         .route {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start; /* Прижимаем содержимое к левому краю */
             font-size: 16px;
             font-weight: bold;
         }
+
+
         .arrow {
             font-size: 20px;
             color: #007bff;
@@ -102,13 +104,15 @@ $orders = [
             console.log(<?= json_encode($order['start_location'], JSON_UNESCAPED_UNICODE) ?>);
             getDetails2(<?= json_encode($order['start_location'], JSON_UNESCAPED_UNICODE) ?>);
 
+
+
         </script>
         <div class="order" onclick="toggleDetails(this)">
             <div class="order-header">
                 <div class="route">
-                    <span><?= htmlspecialchars($order['start_location']) ?></span>
+                    <span><?= htmlspecialchars($order['start_location'] = implode(', ', array_slice(explode('-', $order['start_location']), 0, 2))) ?></span>
                     <span class="arrow">↓</span>
-                    <span><?= htmlspecialchars($order['destination']) ?></span>
+                    <span><?= htmlspecialchars($order['destination'] = implode(', ', array_slice(explode('-', $order['destination']), 0, 2))) ?></span>
                 </div>
             </div>
             <div class="order-details">

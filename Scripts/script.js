@@ -595,7 +595,7 @@ function getDetails(osm_id, osm_type, typeAddress) {
                     .then(detailsStreet => {
                         console.log(osm_id);
                         console.log(streetOsm_id);
-                        StreetEn = detailsStreet.names['name:en']
+                        StreetEn = detailsStreet.names['name:uk']
                         //console.log(StreetEn);
                         console.log(detailsStreet.geometry.coordinates)
                         if (typeAddress === "Start") {
