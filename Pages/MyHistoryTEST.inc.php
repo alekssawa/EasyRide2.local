@@ -1,14 +1,8 @@
 <?php
+global $orders;
 require_once "../includes/config_session.inc.php";
 require_once "../includes/login.view.inc.php";
 require_once "../includes/signup.view.inc.php";
-
-
-$orders = [
-    ["from" => "ул. Ленина, 10", "to" => "пр. Победы, 25", "date" => "2024-02-24", "price" => "350 $", "status" => "Завершен", "comment" => "Безналичный расчет"],
-    ["from" => "аэропорт", "to" => "гостиница 'sdadsd'", "date" => "2024-02-23", "price" => "1200 $", "status" => "Завершен", "comment" => "Встреча с табличкой"],
-    ["from" => "ТРЦ 'Галерея'", "to" => "домой", "date" => "2024-02-22", "price" => "450 $", "status" => "Отменен", "comment" => "Долгое ожидание"],
-];
 
 ?>
 <!doctype html>
@@ -18,7 +12,9 @@ $orders = [
     <meta name="viewport" content="width=device-width" />
     <title>EasyRide</title>
     <link href='../styles/style.css' rel="stylesheet" type="text/css" />
+    <link href='../styles/MyHistotyTest.css' rel="stylesheet" type="text/css" />
     <script src="../Scripts/script.js" defer></script>
+    <script src="../Scripts/MyHistotyTest.js" defer></script>
 </head>
 <body id="profile">
 <?php include '../includes/db.inc.php'; ?>
@@ -48,108 +44,51 @@ $orders = [
     </nav>
 </header>
 <?php require_once "../includes/History_contrTEST.inc.php";?>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        .order {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin: 10px auto;
-            max-width: 400px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        .order:hover {
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-        }
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-        }
-        .order-details {
-            margin-top: 10px;
-            display: none;
-        }
-        .expanded {
-            background: #eef4ff;
-        }
-
-        .route {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start; /* Прижимаем содержимое к левому краю */
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-
-        .arrow {
-            font-size: 20px;
-            color: #007bff;
-            margin: 5px 0;
-        }
-}
-    </style>
 
 <div class="container">
-    <?php foreach ($orders as $order): ?>
-        <script>
-            console.log(<?= json_encode($order['start_location'], JSON_UNESCAPED_UNICODE) ?>);
-            getDetails2(<?= json_encode($order['start_location'], JSON_UNESCAPED_UNICODE) ?>);
 
+<?php require_once "../includes/Driver_info.inc.php";?>
 
+<?php foreach ($orders as $order): ?>
+    <div class="order" onclick="toggleDetails(this)">
+        <div class="order-header">
+            <div class="route">
+                <div class="start_location">
+                    <span><?= htmlspecialchars(implode(', ', array_slice(explode('-', $order['start_location']), 0, 2))) ?></span>
+                    <span>Початок маршруту</span>
+                </div>
 
-        </script>
-        <div class="order" onclick="toggleDetails(this)">
-            <div class="order-header">
-                <div class="route">
-                    <span><?= htmlspecialchars($order['start_location'] = implode(', ', array_slice(explode('-', $order['start_location']), 0, 2))) ?></span>
-                    <span class="arrow">↓</span>
-                    <span><?= htmlspecialchars($order['destination'] = implode(', ', array_slice(explode('-', $order['destination']), 0, 2))) ?></span>
+                <span class="arrow">↓</span>
+
+                <div class="destination">
+                    <span><?= htmlspecialchars(implode(', ', array_slice(explode('-', $order['destination']), 0, 2))) ?></span>
+                    <span>Пункт призначення</span>
                 </div>
             </div>
-            <div class="order-details">
-                <p><strong>Водитель:</strong> <?= htmlspecialchars($order['driver']) ?></p>
-                <p><strong>Тариф:</strong> <?= htmlspecialchars($order['tariff']) ?></p>
-                <p><strong>Дата:</strong> <?= date("d.m.Y H:i", strtotime($order['start_time'])) ?></p>
-                <p><strong>Сумма:</strong> <?= number_format($order['amount'], 2, ',', ' ') ?> ₴</p>
-                <p><strong>Оплата:</strong> <?= htmlspecialchars($order['payment_type']) ?></p>
+        </div>
+        <div class="order-details">
+            <div class="line-with-text">DETAILS</div>
+            <div class="order-details-driver">
+                <div class="profile-driver">
+                    <span><?= htmlspecialchars($order['driver']) ?></span>
+                    <span>Driver
+                        <img src="../img/Star_rating.png" style="width: 10px; height: auto; display: inline-block;" alt="">
+                        <?= htmlspecialchars($order['average_rating']) ?>
+                    </span>
+                </div>
+                <div class="car-driver">
+                    <span class="model"><?= htmlspecialchars($order['car_model'] ?? 'Неизвестно') ?></span>
+                    <span class="plate"><?= htmlspecialchars($order['car_registration_plate'] ?? 'Неизвестно') ?></span>
+                </div>
+            </div>
+            <div>
+                <p>Тариф: <?= htmlspecialchars($order['tariff']) ?></p>
+                <p>Дата: <?= date("d.m.Y H:i", strtotime($order['start_time'])) ?></p>
+                <p>Сумма: <?= number_format($order['amount'], 2, ',', ' ') ?> ₴</p>
+                <p>Оплата: <?= htmlspecialchars($order['payment_type']) ?></p>
             </div>
         </div>
-    <?php endforeach; ?>
-</div>
-
-<script>
-
-    // fetch(`https://nominatim.openstreetmap.org/details.php?osmtype=W&osmid=1223544492&addressdetails=1&format=json`)
-    //     .then(response => response.json())
-    //     .then(details => {
-    //         console.log(details.names["name:uk"]);
-    //         console.log(details);
-    //     })
-    //     .catch(error => {
-    //         console.error('Ошибка при получении деталей:', error);
-    //     });
-
-    function toggleDetails(orderElement) {
-        const details = orderElement.querySelector('.order-details');
-        const isOpen = details.style.display === "block";
-
-        document.querySelectorAll('.order-details').forEach(el => el.style.display = "none");
-        document.querySelectorAll('.order').forEach(el => el.classList.remove('expanded'));
-
-        if (!isOpen) {
-            details.style.display = "block";
-            orderElement.classList.add('expanded');
-        }
-    }
-</script>
+    </div>
+<?php endforeach; ?>
 </body>
 </html>
