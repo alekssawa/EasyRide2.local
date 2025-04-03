@@ -40,6 +40,9 @@ try {
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
+    } else{
+        header("Location: ../main.php");
+        exit();
     }
 
 

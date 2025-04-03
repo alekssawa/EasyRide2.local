@@ -17,7 +17,7 @@ try {
     $query = "SELECT t.trip_id AS id, d.driver_p_i_b AS driver, d.driver_id, c.car_model, c.car_registration_plate, 
                      t.trip_client_start_location AS start_location, t.trip_client_destination AS destination, 
                      tar.tariff_name AS tariff, p.payment_amount AS amount, t.trip_payment_type AS payment_type, 
-                     t.trip_start_time AS start_time
+                     t.trip_start_time AS start_time, t.trip_end_time AS end_time
               FROM triphistory t
               JOIN tariffs tar ON t.trip_tariff_id = tar.tariff_id
               JOIN drivers d ON t.trip_driver_id = d.driver_id

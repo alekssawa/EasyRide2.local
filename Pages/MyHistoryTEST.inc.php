@@ -82,11 +82,25 @@ require_once "../includes/signup.view.inc.php";
                     <span class="plate"><?= htmlspecialchars($order['car_registration_plate'] ?? 'Неизвестно') ?></span>
                 </div>
             </div>
-            <div>
-                <p>Тариф: <?= htmlspecialchars($order['tariff']) ?></p>
-                <p>Дата: <?= date("d.m.Y H:i", strtotime($order['start_time'])) ?></p>
-                <p>Сумма: <?= number_format($order['amount'], 2, ',', ' ') ?> ₴</p>
-                <p>Оплата: <?= htmlspecialchars($order['payment_type']) ?></p>
+            <div class="order-info">
+                <div>
+                    <span class="first">Тариф:</span>
+                    <span class="second"> <?= htmlspecialchars($order['tariff']) ?></span>
+                    <span class="first">Дата:</span>
+                    <span class="second"><?= date("d.m.Y H:i", strtotime($order['start_time'])) ?></span>
+                </div>
+                <div>
+                    <span class="first">Дальність подорожі:</span>
+                    <span class="second">0 км</span> <!-- <?= number_format($order['distance_km'], 1, ',', ' ') ?>--->
+                    <span class="first">Тривалість подорожі:</span>
+                    <span class="second"><?= intval((strtotime(explode('.', $order['end_time'])[0]) - strtotime(explode('.', $order['start_time'])[0])) / 60) ?> мин</span>
+                </div>
+                <div>
+                    <span class="first">Тип оплати:</span>
+                    <span class="second"><?= htmlspecialchars($order['payment_type']) ?></span>
+                    <span class="first">Вартість проїзду:</span>
+                    <span class="second"><?= number_format($order['amount'], 2, ',', ' ') ?> ₴</span>
+                </div>
             </div>
         </div>
     </div>

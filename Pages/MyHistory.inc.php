@@ -108,9 +108,7 @@ require_once "../includes/signup.view.inc.php";
         font-weight: bold;
         font-size: 20px;
     }
-    .info-button {
-        align-self: end; /* Выравнивание по верхнему краю */
-    }
+
     .info-label {
         font-weight: bold;
     }
