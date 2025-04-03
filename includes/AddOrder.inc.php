@@ -1,6 +1,4 @@
 <?php
-$testt = "1";
-
 
 try {
     require_once "../includes/config_session.inc.php";

@@ -52,17 +52,18 @@ require_once "../includes/signup.view.inc.php";
 <?php foreach ($orders as $order): ?>
     <div class="order" onclick="toggleDetails(this)">
         <div class="order-header">
-            <div class="route">
-                <div class="start_location">
-                    <span><?= htmlspecialchars(implode(', ', array_slice(explode('-', $order['start_location']), 0, 2))) ?></span>
-                    <span>Початок маршруту</span>
-                </div>
-
-                <span class="arrow">↓</span>
-
-                <div class="destination">
-                    <span><?= htmlspecialchars(implode(', ', array_slice(explode('-', $order['destination']), 0, 2))) ?></span>
-                    <span>Пункт призначення</span>
+            <div class="route-wrapper">
+                <img src="../img/IconTripHistoryDarker.png" alt="Маршрут" class="route-icon">
+                <div class="route">
+                    <div class="start_location">
+                        <span><?= htmlspecialchars(implode(', ', array_slice(explode('-', $order['start_location']), 0, 2))) ?></span>
+                        <span>Початок маршруту</span>
+                    </div>
+                    <br>
+                    <div class="destination">
+                        <span><?= htmlspecialchars(implode(', ', array_slice(explode('-', $order['destination']), 0, 2))) ?></span>
+                        <span>Пункт призначення</span>
+                    </div>
                 </div>
             </div>
         </div>

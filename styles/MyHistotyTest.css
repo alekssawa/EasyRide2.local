@@ -38,6 +38,15 @@
     font-size: 16px;
     /*font-weight: ;*/
 }
+.route-wrapper {
+    display: flex;
+    align-items: center;
+}
+.route-icon {
+    width: calc(305px/10); /* Размер иконки */
+    height: calc(881px/10) ;
+    margin-right: 10px; /* Отступ от маршрута */
+}
 
 .arrow {
     font-size: 20px;
