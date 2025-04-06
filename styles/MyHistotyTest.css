@@ -165,15 +165,16 @@
 .order-info {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* Три равных столбца */
-    gap: 20px; /* Расстояние между столбцами */
+    gap: 20px;
+    justify-items: center;
 }
 
 .order-info > div {
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* Выравнивание строк по левому краю */
-    justify-content: space-between; /* Равномерное распределение по вертикали */
-    height: 100%; /* Чтобы заполнить высоту столбца */
+    align-items: flex-start;
+    justify-content: space-between;
+    height: 100%;
 }
 
 .order-info span {
@@ -183,9 +184,92 @@
 
 .order-info .first {
     font-weight: 500; /* Жирный текст для первого элемента */
+    display: block;
 }
 
 .order-info .second {
     color: gray;
     font-size: 14px;
+    display: block;
+}
+
+.order-info .line {
+    margin-bottom: 10px; /* Вертикальный отступ между парами */
+}
+.feedback-section {
+    /* margin-top: 30px; */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.feedback-section label {
+    font-size: 16px;
+    font-weight: 500;
+    color: black;
+}
+
+.feedback-section textarea {
+    width: 100%;
+    min-height: 100px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+    color: rgb(59, 59, 59);
+    resize: none; /* Отключаем возможность ручного изменения размера */
+    overflow-y: hidden; /* Убираем полосу прокрутки */
+}
+
+.feedback-section .char-limit-warning {
+    color: #cf3838;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none; /* Скрыть по умолчанию */
+}
+
+.feedback-section button {
+    align-self: flex-end;
+    padding: 8px 16px;
+    background-color: #515567;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.feedback-section button:hover {
+    background-color: #64687e;
+}
+
+.rating {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.rating .star img {
+    width: 20px;
+    height: auto;
+    cursor: pointer;
+}
+
+.star.selected img.empty {
+    display: none; /* Прячем пустую звезду */
+}
+
+.star.selected img.filled {
+    display: inline-block; /* Показываем заполненную звезду */
+}
+
+.char-limit-warning {
+    font-size: 12px;
+    color: red;
+    margin-top: 5px;
 }

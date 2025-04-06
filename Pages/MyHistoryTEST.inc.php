@@ -11,8 +11,13 @@ require_once "../includes/signup.view.inc.php";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>EasyRide</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+
     <link href='../styles/style.css' rel="stylesheet" type="text/css" />
     <link href='../styles/MyHistotyTest.css' rel="stylesheet" type="text/css" />
+
     <script src="../Scripts/script.js" defer></script>
     <script src="../Scripts/MyHistotyTest.js" defer></script>
 </head>
@@ -84,23 +89,50 @@ require_once "../includes/signup.view.inc.php";
             </div>
             <div class="order-info">
                 <div>
-                    <span class="first">Тариф:</span>
-                    <span class="second"> <?= htmlspecialchars($order['tariff']) ?></span>
-                    <span class="first">Дата:</span>
-                    <span class="second"><?= date("d.m.Y H:i", strtotime($order['start_time'])) ?></span>
+                    <div class="line">
+                        <span class="first">Тариф:</span>
+                        <span class="second"><?= htmlspecialchars($order['tariff']) ?></span>
+                    </div>
+                    <div class="line">
+                        <span class="first">Дата:</span>
+                        <span class="second"><?= date("d.m.y H:i", strtotime($order['start_time'])) ?></span>
+                    </div>
                 </div>
                 <div>
-                    <span class="first">Дальність подорожі:</span>
-                    <span class="second">0 км</span> <!-- <?= number_format($order['distance_km'], 1, ',', ' ') ?>--->
-                    <span class="first">Тривалість подорожі:</span>
-                    <span class="second"><?= intval((strtotime(explode('.', $order['end_time'])[0]) - strtotime(explode('.', $order['start_time'])[0])) / 60) ?> мин</span>
+                    <div class="line">
+                        <span class="first">Відстань:</span>
+                        <span class="second">0 км</span>
+                    </div>
+                    <div class="line">
+                        <span class="first">Тривалість:</span>
+                        <span class="second"><?= intval((strtotime(explode('.', $order['end_time'])[0]) - strtotime(explode('.', $order['start_time'])[0])) / 60) ?> мин</span>
+                    </div>
                 </div>
                 <div>
-                    <span class="first">Тип оплати:</span>
-                    <span class="second"><?= htmlspecialchars($order['payment_type']) ?></span>
-                    <span class="first">Вартість проїзду:</span>
-                    <span class="second"><?= number_format($order['amount'], 2, ',', ' ') ?> ₴</span>
+                    <div class="line">
+                        <span class="first">Тип оплати:</span>
+                        <span class="second"><?= htmlspecialchars($order['payment_type']) ?></span>
+                    </div>
+                    <div class="line">
+                        <span class="first">Вартість:</span>
+                        <span class="second"><?= number_format($order['amount'], 2, ',', ' ') ?> ₴</span>
+                    </div>
                 </div>
+            </div>
+            <div class="line-with-text">REVIEW</div>
+            <div class="feedback-section">
+                <textarea id="feedback" placeholder="Напишіть свій відгук тут..." maxlength="500"></textarea>
+                <div id="char-limit-warning" class="char-limit-warning"></div>
+                
+                <div class="rating">
+                    <span class="star" data-value="1"><img src="../img/Star_Empty_rating.png" alt="1" class="empty" /></span>
+                    <span class="star" data-value="2"><img src="../img/Star_Empty_rating.png" alt="2" class="empty" /></span>
+                    <span class="star" data-value="3"><img src="../img/Star_Empty_rating.png" alt="3" class="empty" /></span>
+                    <span class="star" data-value="4"><img src="../img/Star_Empty_rating.png" alt="4" class="empty" /></span>
+                    <span class="star" data-value="5"><img src="../img/Star_Empty_rating.png" alt="5" class="empty" /></span>
+                </div>
+                
+                <button type="button" id="submit-review">Надіслати</button>
             </div>
         </div>
     </div>
