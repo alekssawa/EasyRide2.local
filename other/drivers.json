@@ -1,11 +1,11 @@
 [
     [
         {
-            "driver_id": 1,
+            "driver_id": 16,
             "tariff_name": "Minibus"
         },
         {
-            "driver_id": 24,
+            "driver_id": 19,
             "tariff_name": "Delivery"
         },
         {
@@ -15,11 +15,11 @@
     ],
     [
         {
-            "driver_id": 16,
+            "driver_id": 1,
             "tariff_name": "Minibus"
         },
         {
-            "driver_id": 19,
+            "driver_id": 24,
             "tariff_name": "Delivery"
         },
         {

@@ -206,18 +206,12 @@
     margin-right: auto;
 }
 
-.feedback-section label {
-    font-size: 16px;
-    font-weight: 500;
-    color: black;
-}
-
 .feedback-section textarea {
     width: 100%;
     min-height: 100px;
     border: 1px solid #ddd;
     border-radius: 10px;
-    padding: 10px;
+    padding: 14px;
     font-size: 14px;
     font-family: 'Roboto', sans-serif;
     color: rgb(59, 59, 59);
@@ -233,8 +227,11 @@
 }
 
 .feedback-section button {
-    align-self: flex-end;
-    padding: 8px 16px;
+    /* align-self: center; */
+    /* width: 280px; */
+    padding: 12px 12px;
+    margin-top: 10px;
+    margin-bottom: 5px;
     background-color: #515567;
     color: white;
     border: none;
@@ -250,12 +247,13 @@
 
 .rating {
     display: flex;
-    gap: 5px;
+    gap: 10px;
     margin-top: 10px;
+    justify-content: center;
 }
 
 .rating .star img {
-    width: 20px;
+    width: 35px;
     height: auto;
     cursor: pointer;
 }
@@ -266,10 +264,4 @@
 
 .star.selected img.filled {
     display: inline-block; /* Показываем заполненную звезду */
-}
-
-.char-limit-warning {
-    font-size: 12px;
-    color: red;
-    margin-top: 5px;
 }

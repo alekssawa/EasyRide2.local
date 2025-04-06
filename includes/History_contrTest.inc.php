@@ -4,7 +4,6 @@ try {
     require_once '../includes/login_model.inc.php';
     require_once '../includes/login_contr.inc.php';
 
-
     if (!isset($pdo)) {
         echo ("ERROR DATABASE CONNECTION");
     }
@@ -21,10 +20,31 @@ try {
         $stmt->execute();
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        echo '<script src="../Scripts/test2.js"></script>';
-//        echo '<script>getDetails2()</script>';
 
-
+        if ($orders) {
+            echo '<table class="content-table">';
+            echo '<thead>';
+            echo '<tr>';
+            // Вывод заголовков таблицы
+            foreach (array_keys($orders[0]) as $column) {
+                echo "<th>$column</th>";
+            }
+            echo '</tr>';
+            echo '</thead>';
+            // Вывод данных таблицы
+            echo '<tbody>';
+            foreach ($orders as $order) {
+                echo '<tr>';
+                foreach ($order as $value) {
+                    echo "<td>$value</td>";
+                }
+                echo '</tr>';
+            }
+            echo '</tbody>';
+            echo '</table>';
+        } else {
+            echo '<p>У вас немає подорожі</p>';
+        }
     } elseif ($_SESSION["user_status"] == "Driver"){
 
         $stmt = $pdo->prepare('SELECT trip_id as id, clients.client_p_i_b as client, tariffs.tariff_name as tariff, payment_amount as amount,
@@ -40,9 +60,31 @@ try {
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
-    } else{
-        header("Location: ../main.php");
-        exit();
+        if ($orders) {
+            echo '<table class="content-table">';
+            echo '<thead>';
+            echo '<tr>';
+            // Вывод заголовков таблицы
+            foreach (array_keys($orders[0]) as $column) {
+                echo "<th>$column";
+
+            }
+            echo '</tr>';
+            echo '</thead>';
+            // Вывод данных таблицы
+            echo '<tbody>';
+            foreach ($orders as $order) {
+                echo '<tr>';
+                foreach ($order as $value) {
+                    echo "<td>$value</td>";
+                }
+                echo '</tr>';
+            }
+            echo '</tbody>';
+            echo '</table>';
+        } else {
+            echo '<p>У вас немає подорожі</p>';
+        }
     }
 
 
