@@ -1,2 +1,4 @@
 
 /.idea
+.osp/Nginx/easyride2.local.conf
+error.log
