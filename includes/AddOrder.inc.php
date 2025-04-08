@@ -110,9 +110,9 @@ try {
             }
 
             $sql = "INSERT INTO orders (order_payment_id,order_client_id, order_driver_id,order_tariff_id, 
-                    order_order_time, order_client_start_location, order_client_destination, order_payment_type, order_order_status)
+                    order_order_time, order_client_start_location, order_client_destination, order_payment_type, order_order_status, order_distance)
             VALUES (:order_payment_id, :order_client_id, :order_driver_id,:order_tariff_id,
-                    :order_order_time,:order_client_start_location, :order_client_destination, :order_payment_type, :order_order_status)";
+                    :order_order_time,:order_client_start_location, :order_client_destination, :order_payment_type, :order_order_status, :order_distance)";
             $stmt = $pdo->prepare($sql);
 
             // Привязка параметров
@@ -125,6 +125,7 @@ try {
             $stmt->bindParam(':order_client_destination', $_SESSION['GEndAddress']);
             $stmt->bindParam(':order_payment_type', $_SESSION['selectedPaymentType']);
             $stmt->bindParam(':order_order_status', $order_status);
+            $stmt->bindParam(':order_distance', $_SESSION['TotalDistance']);
 
             if ($stmt->execute()) {
                 // Check if a row was inserted

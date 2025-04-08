@@ -15,7 +15,9 @@ try {
         JOIN tariffs ON triphistory.trip_tariff_id = tariffs.tariff_id
         JOIN drivers ON triphistory.trip_driver_id = drivers.driver_id
         JOIN payments ON triphistory.trip_payment_id = payments.payment_id
-        WHERE trip_client_id = :trip_client_id;');
+        WHERE trip_client_id = :trip_client_id
+        ORDER BY trip_id DESC;
+        ');
 
         $stmt->bindParam(":trip_client_id", $_SESSION["user_id"]);
         $stmt->execute();
@@ -33,7 +35,9 @@ try {
         JOIN tariffs ON triphistory.trip_tariff_id = tariffs.tariff_id
         JOIN clients ON triphistory.trip_client_id = clients.client_id
         JOIN payments ON triphistory.trip_payment_id = payments.payment_id
-        WHERE trip_driver_id = :trip_driver_id;');
+        WHERE trip_driver_id = :trip_driver_id
+        ORDER BY trip_id DESC;
+        ');
 
         $stmt->bindParam(":trip_driver_id", $_SESSION["user_id"]);
         $stmt->execute();

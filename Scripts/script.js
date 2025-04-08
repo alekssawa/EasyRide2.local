@@ -169,7 +169,8 @@ function GetTimeValue(time) {
     let hours = currentDate.getHours();
     let minutes = currentDate.getMinutes();
     let seconds = currentDate.getSeconds();
-    month = month < 10 ? '0' + month : month;
+    month = month + 1;
+    month = month < 10 ? '0' + month : month;   
     date = date < 10 ? '0' + date : date;
     hours = hours < 10 ? '0' + hours : hours;
     minutes = minutes < 10 ? '0' + minutes : minutes;
@@ -187,6 +188,7 @@ function GetTimeValue(time) {
 function TimeSelect(time) {
     selectedRadioTime = time;
     GTime = GetTimeValue(time)[0]
+    console.log(GetTimeValue(time)[0]);
     if (selectedRadioTime !== "SetTime") {
         document.getElementById("outputTime").textContent = TimeDictionaryText[selectedRadioTime];
     } else if (selectedRadioTime === "SetTime") {

@@ -46,63 +46,61 @@ document.querySelectorAll('.feedback-section textarea').forEach(textarea => {
 // Обработка кликов на звезды
 document.querySelectorAll('.rating .star').forEach(star => {
     star.addEventListener('click', function () {
-        const ratingValue = parseInt(this.getAttribute('data-value'));
-
-        // Обновляем рейтинг
-        reviewRating = ratingValue;
-
-        // Убираем все звезды (пустые)
-        document.querySelectorAll('.rating .star img').forEach(img => {
-            img.src = '../img/Star_Empty_rating.png';  // Показать пустые звезды
-        });
-
-        // Добавляем заполненные звезды до выбранного значения
-        document.querySelectorAll('.rating .star').forEach((star, index) => {
-            if (index < ratingValue) {
-                star.querySelector('img').src = '../img/Star_rating.png';  // Заполненная звезда
-            }
+        reviewRating = parseInt(this.getAttribute('data-value'));
+        const allStars = this.parentElement.querySelectorAll('.star img');
+        allStars.forEach((img, index) => {
+            img.src = index < reviewRating ? '../img/Star_rating.png' : '../img/Star_Empty_rating.png';
         });
     });
 });
 
 // Обработка отправки отзыва
-document.getElementById('submit-review').addEventListener('click', function () {
-    const reviewText = document.getElementById('feedback').value;
+document.querySelectorAll('.submit-review').forEach(button => {
+    button.addEventListener('click', function () {
+        const parent = this.closest('.feedback-section');
+        const reviewText = parent.querySelector('textarea').value;
+        const review_client_id = +this.dataset.clientId; // Преобразуем в целое число
+        const review_driver_id = +this.dataset.driverId; // Преобразуем в целое число
 
-    if (reviewText.trim() === '' || reviewRating === 0) {
-        alert('Будь ласка, напишіть відгук і виберіть рейтинг.');
-        return;
-    }
 
-    const reviewData = {
-        review_client_id: 1, // Замените на реальный ID клиента
-        review_driver_id: 1, // Замените на реальный ID водителя
-        review_text: reviewText,
-        review_rating: reviewRating
-    };
-
-    fetch('your_api_endpoint_here', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reviewData),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Відгук успішно надіслано!');
-            // Очистить форму
-            document.getElementById('feedback').value = '';
-            document.querySelectorAll('.rating .star img').forEach(img => {
-                img.src = '../img/Star_Empty_rating.png';  // Сбросить все звезды на пустые
-            });
-        } else {
-            alert('Сталася помилка при відправці відгуку.');
+        if (reviewText.trim() === '' || reviewRating === 0) {
+            alert('Будь ласка, напишіть відгук і виберіть рейтинг.');
+            return;
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Сталася помилка при відправці відгуку.');
+
+        const reviewData = {
+            review_client_id,
+            review_driver_id,
+            review_text: reviewText,
+            review_rating: reviewRating
+        };
+
+        console.log(reviewData);
+
+        fetch('../includes/AddReview.inc.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(reviewData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);  // Выводим ответ сервера
+            if (data.success) {
+                alert('Відгук успішно надіслано!');
+                // Очистить форму
+                document.getElementById('feedback').value = '';
+                document.querySelectorAll('.rating .star img').forEach(img => {
+                    img.src = '../img/Star_Empty_rating.png';  // Сбросить все звезды на пустые
+                });
+            } else {
+                alert('Сталася помилка при відправці відгуку.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Сталася помилка при відправці відгуку.');
+        });
     });
 });

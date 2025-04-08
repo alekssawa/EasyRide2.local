@@ -101,7 +101,7 @@ require_once "../includes/signup.view.inc.php";
                 <div>
                     <div class="line">
                         <span class="first">Відстань:</span>
-                        <span class="second">0 км</span>
+                        <span class="second"><?= number_format($order['distance'], 2, ',', ' ') ?> км</span>
                     </div>
                     <div>
                         <span class="first">Тривалість:</span>
@@ -132,7 +132,11 @@ require_once "../includes/signup.view.inc.php";
                     <span class="star" data-value="5"><img src="../img/Star_Empty_rating.png" alt="5" class="empty" /></span>
                 </div>
                 
-                <button type="button" id="submit-review">Надіслати</button>
+                <button type="button" class="submit-review"
+                        data-client-id="<?= $_SESSION['user_id'] ?>"
+                        data-driver-id="<?= $order['driver_id'] ?>">
+                    Надіслати
+                </button>
             </div>
         </div>
     </div>

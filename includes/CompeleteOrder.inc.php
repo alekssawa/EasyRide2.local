@@ -25,10 +25,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["complete_order"])) {
 
             $sql = "INSERT INTO triphistory (trip_client_id, trip_driver_id, trip_tariff_id,
                          trip_payment_id, trip_payment_type, trip_start_time, trip_end_time,
-                         trip_client_start_location, trip_client_destination)
+                         trip_client_start_location, trip_client_destination, trip_distance)
                         VALUES (:trip_client_id, :trip_driver_id,
                                 :trip_tariff_id, :trip_payment_id, :trip_payment_type,
-                                :trip_start_time, :trip_end_time, :trip_client_start_location, :trip_client_destination)";
+                                :trip_start_time, :trip_end_time, :trip_client_start_location, :trip_client_destination, :trip_distance)";
 
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':trip_client_id', $order['order_client_id']);
@@ -40,6 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["complete_order"])) {
             $stmt->bindParam(':trip_end_time', $fullTime);
             $stmt->bindParam(':trip_client_start_location', $order['order_client_start_location']);
             $stmt->bindParam(':trip_client_destination', $order['order_client_destination']);
+            $stmt->bindParam(':trip_distance', $order['order_distance']);
 
             $stmt->execute();
             $triphistory = $pdo->lastInsertId();
