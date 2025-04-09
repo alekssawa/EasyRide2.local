@@ -87,6 +87,17 @@
     border: 1px solid #dcdcdc; /* Обводка толщиной 2px и серым цветом */
 }
 
+.order-details-client {
+    display: flex;
+    justify-content: space-between;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    height: 75px; /* Увеличиваем высоту, чтобы было достаточно места для текста */
+    border: 1px solid #dcdcdc; /* Обводка толщиной 2px и серым цветом */
+}
+
 .start_location {
     display: flex;
     flex-direction: column;
@@ -132,6 +143,23 @@
 }
 
 .profile-driver span:last-child {
+    /*padding-top: 15px;*/
+    color: gray;
+    font-size: 14px;
+    margin-top: auto;
+}
+
+.profile-client {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Сдвигает содержимое вниз */
+}
+
+.profile-client span:first-child {
+    font-weight: 500;
+}
+
+.profile-client span:last-child {
     /*padding-top: 15px;*/
     color: gray;
     font-size: 14px;

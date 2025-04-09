@@ -104,7 +104,7 @@ require_once "../includes/signup.view.inc.php";
                             </div>
                             <div>
                                 <span class="first">Дата:</span>
-                                <span class="second"><?= date("d.m.y H:i", strtotime($order['start_time'])) ?></span>
+                                <span class="second"><?= date("d.m.y H:i", strtotime($order['end_time'])) ?></span>
                             </div>
                         </div>
                         <div>

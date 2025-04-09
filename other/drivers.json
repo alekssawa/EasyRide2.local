@@ -5,6 +5,20 @@
             "tariff_name": "Minibus"
         },
         {
+            "driver_id": 24,
+            "tariff_name": "Delivery"
+        },
+        {
+            "driver_id": 4,
+            "tariff_name": "Business"
+        }
+    ],
+    [
+        {
+            "driver_id": 1,
+            "tariff_name": "Minibus"
+        },
+        {
             "driver_id": 19,
             "tariff_name": "Delivery"
         },
@@ -15,25 +29,11 @@
     ],
     [
         {
-            "driver_id": 1,
-            "tariff_name": "Minibus"
-        },
-        {
-            "driver_id": 24,
-            "tariff_name": "Delivery"
-        },
-        {
-            "driver_id": 22,
-            "tariff_name": "Business"
-        }
-    ],
-    [
-        {
             "driver_id": 26,
             "tariff_name": "Comfort"
         },
         {
-            "driver_id": 4,
+            "driver_id": 22,
             "tariff_name": "Business"
         },
         {

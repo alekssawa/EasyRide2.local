@@ -93,7 +93,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["canceled_order"])) {
                 echo "Нет заказов в процессе выполнения для текущего пользователя.";
             }
         }
-        header("Location: ../Pages/MyOrder.inc.php");
+        // header("Location: ../Pages/MyOrder.inc.php");
     } catch (PDOException $e) {
         echo "Ошибка: " . $e->getMessage();
     }
