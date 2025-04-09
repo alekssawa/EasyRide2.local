@@ -7,8 +7,7 @@ try {
     if (!isset($pdo)) {
         echo ("ERROR DATABASE CONNECTION");
     }
-    if ($_SESSION["user_status"] == "Client") {
-        $stmt = $pdo->prepare('
+    $stmt = $pdo->prepare('
         SELECT orders.order_id as id, 
                drivers.driver_p_i_b as driver, 
                tariffs.tariff_name as tariff, 
@@ -45,29 +44,29 @@ try {
         ORDER BY orders.order_id;
     ');
 
-        $stmt->bindParam(":order_client_id", $_SESSION["user_id"]);
-        $stmt->bindParam(":order_order_status", $status);
-        $status = "In progress";
-        $stmt->execute();
+    $stmt->bindParam(":order_client_id", $_SESSION["user_id"]);
+    $stmt->bindParam(":order_order_status", $status);
+    $status = "In progress";
+    $stmt->execute();
 
-        // Получаем первый (и единственный) заказ
-        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Получаем первый (и единственный) заказ
+    $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Если нужно, можно округлить рейтинг
-        if ($order) {
-            // Заказ найден
-            $order['average_rating'] = round($order['average_rating'], 2);
+    // Если нужно, можно округлить рейтинг
+    if ($order) {
+        // Заказ найден
+        $order['average_rating'] = round($order['average_rating'], 2);
 
-            // Рассчитываем сумму (amount)
-            if ($order['distance'] < 2) {
-                // Если расстояние меньше 2 км
-                $order['amount'] = round($order['tariff_cost_for_basic_2km'] * 2);
-            } else {
-                // Если расстояние больше или равно 2 км
-                $TempCost = $order['distance'] - 2;
-                $order['amount'] = round(($TempCost * $order['tariff_cost_for_additional_km'] + $order['tariff_cost_for_basic_2km']) * 2);
-            }
-            echo '
+        // Рассчитываем сумму (amount)
+        if ($order['distance'] < 2) {
+            // Если расстояние меньше 2 км
+            $order['amount'] = round($order['tariff_cost_for_basic_2km'] * 2);
+        } else {
+            // Если расстояние больше или равно 2 км
+            $TempCost = $order['distance'] - 2;
+            $order['amount'] = round(($TempCost * $order['tariff_cost_for_additional_km'] + $order['tariff_cost_for_basic_2km']) * 2);
+        }
+        echo '
             <div class="order">
                 <div class="order-header">
                     <div class="route-wrapper">
@@ -129,37 +128,32 @@ try {
                         </div>
                     </div>
                     <div class="line-with-text">CONTROL</div>
-                    <div class="order-control">
+                    <div class="order-control">';
+        if ($_SESSION["user_status"] == "Client") {
+            echo '
                         <div class="button-container">
                             <form style="width: 100%;"" action="../includes/CanceledOrder.inc.php" method="post">
                                 <button class="buttonComplete" type="submit" name="canceled_order">Отменить поездку</button>
                             </form>
-                        </div>
-                    </div>
-                </div>
-            </div>';
-        } else {
-            // Заказ не найден
-            echo '<p>У вас немає подорожі</p>';
+                        </div>';
+        } else if ($_SESSION["user_status"] == "Driver") {
+            echo '
+                <div class="button-container">
+                    <form style="width: 100%; margin-right: 10px;" action="../includes/CanceledOrder.inc.php" method="post">
+                        <button class="buttonComplete" type="submit" name="canceled_order">Отменить поездку</button>
+                    </form>
+                    <form style="width: 100%;" action="../includes/CompeleteOrder.inc.php" method="post">
+                        <button class="buttonComplete buttonComplete-right" type="submit" name="complete_order">Завершить поездку</button>
+                    </form>
+                </div>';
         }
-    } elseif ($_SESSION["user_status"] == "Driver") {
-        $stmt = $pdo->prepare('SELECT orders.order_id as id, clients.client_p_i_b as client, 
-        tariffs.tariff_name as tariff, 
-        orders.order_order_time as time, orders.order_client_start_location as start_location,
-        orders.order_client_destination as destination, orders.order_payment_type as payment_type, 
-        orders.order_order_status as status
-        FROM orders 
-        JOIN tariffs ON orders.order_tariff_id = tariffs.tariff_id
-        JOIN clients ON orders.order_client_id = clients.client_id
-        WHERE orders.order_driver_id = :order_driver_id
-        AND orders.order_order_status = :order_order_status
-        ORDER BY orders.order_id;');
-
-        $stmt->bindParam(":order_driver_id", $_SESSION["user_id"]);
-        $stmt->bindParam(":order_order_status", $status);
-        $status = "In progress";
-        $stmt->execute();
-        $order = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo '    
+            </div>
+        </div>
+    </div>';
+    } else {
+        // Заказ не найден
+        echo '<p>У вас немає подорожі</p>';
     }
 } catch (PDOException $e) {
     die("Query failed: " . $e->getMessage());

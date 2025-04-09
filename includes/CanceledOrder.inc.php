@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["canceled_order"])) {
     try {
         $order_status_in_progress = "In progress";
 
-        if ($_SESSION["user_status"] === "Client"){
+        if ($_SESSION["user_status"] === "Client") {
             $stmt_select_order_id = $pdo->prepare('SELECT order_id FROM orders WHERE order_client_id = :order_client_id AND order_order_status = :order_status_in_progress');
 
             // Привязка параметров
@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["canceled_order"])) {
             } else {
                 echo "Нет заказов в процессе выполнения для текущего пользователя.";
             }
-        }elseif ($_SESSION["user_status"] === "Driver"){
+        } elseif ($_SESSION["user_status"] === "Driver") {
             $stmt_select_order_id = $pdo->prepare('SELECT order_id FROM orders WHERE order_driver_id = :order_driver_id AND order_order_status = :order_status_in_progress');
 
             // Привязка параметров
@@ -94,11 +94,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["canceled_order"])) {
             }
         }
         header("Location: ../Pages/MyOrder.inc.php");
-
-
     } catch (PDOException $e) {
         echo "Ошибка: " . $e->getMessage();
     }
     exit;
 }
-?>
