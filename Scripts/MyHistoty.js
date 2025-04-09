@@ -59,6 +59,7 @@ document.querySelectorAll('.submit-review').forEach(button => {
     button.addEventListener('click', function () {
         const parent = this.closest('.feedback-section');
         const reviewText = parent.querySelector('textarea').value;
+        const review_trip_id = +this.dataset.id;
         const review_client_id = +this.dataset.clientId; // Преобразуем в целое число
         const review_driver_id = +this.dataset.driverId; // Преобразуем в целое число
 
@@ -69,6 +70,7 @@ document.querySelectorAll('.submit-review').forEach(button => {
         }
 
         const reviewData = {
+            review_trip_id,
             review_client_id,
             review_driver_id,
             review_text: reviewText,

@@ -8,7 +8,7 @@ try {
     if (!isset($pdo)) {
         echo ("ERROR DATABASE CONNECTION");
     }
-    if($_SESSION["user_status"] == "Client") {
+    if ($_SESSION["user_status"] == "Client") {
         $stmt = $pdo->prepare('SELECT trip_id as id, drivers.driver_p_i_b as driver, tariffs.tariff_name as tariff, payment_amount as amount, 
        trip_payment_type as payment_type, trip_start_time as start_time, trip_end_time as end_time, trip_client_start_location as start_location, trip_client_destination  as destination
         FROM triphistory
@@ -24,10 +24,10 @@ try {
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         echo '<script src="../Scripts/test2.js"></script>';
-//        echo '<script>getDetails2()</script>';
+        //        echo '<script>getDetails2()</script>';
 
 
-    } elseif ($_SESSION["user_status"] == "Driver"){
+    } elseif ($_SESSION["user_status"] == "Driver") {
 
         $stmt = $pdo->prepare('SELECT trip_id as id, clients.client_p_i_b as client, tariffs.tariff_name as tariff, payment_amount as amount,
        trip_payment_type as payment_type, trip_start_time as start_time, trip_end_time as end_time, trip_client_start_location as start_location, trip_client_destination  as destination
@@ -42,16 +42,10 @@ try {
         $stmt->bindParam(":trip_driver_id", $_SESSION["user_id"]);
         $stmt->execute();
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-
-    } else{
+    } else {
         header("Location: ../main.php");
         exit();
     }
-
-
 } catch (PDOException $e) {
     die("Query failed: " . $e->getMessage());
-
 }
-?>

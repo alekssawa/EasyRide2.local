@@ -32,13 +32,18 @@ try {
     $stmt->execute();
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    foreach ($orders as &$order) {
+    foreach ($orders as $key => $order) {
         $stmt = $pdo->prepare("SELECT AVG(review_rating) AS average_rating FROM reviews_drivers WHERE review_driver_id = :driver_id");
         $stmt->bindParam(":driver_id", $order["driver_id"]);
         $stmt->execute();
-        $order["average_rating"] = round($stmt->fetchColumn(), 2) ?: 0;
+    
+        // Получаем средний рейтинг или NULL, если не найдено значений
+        $averageRating = $stmt->fetchColumn();
+    
+        // Если $averageRating не NULL, то округляем, иначе ставим 0
+        $orders[$key]["average_rating"] = $averageRating !== null ? round($averageRating, 2) : 0;
     }
+    
 } catch (PDOException $e) {
     die("Query failed: " . $e->getMessage());
 }
-?>
