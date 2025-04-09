@@ -23,7 +23,7 @@ try {
         $stmt->execute();
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        echo '<script src="../Scripts/test2.js"></script>';
+        // echo '<script src="../Scripts/test2.js"></script>';
         //        echo '<script>getDetails2()</script>';
 
 

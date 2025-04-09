@@ -9,7 +9,7 @@
             "tariff_name": "Delivery"
         },
         {
-            "driver_id": 22,
+            "driver_id": 20,
             "tariff_name": "Business"
         }
     ],
@@ -23,13 +23,13 @@
             "tariff_name": "Delivery"
         },
         {
-            "driver_id": 20,
+            "driver_id": 22,
             "tariff_name": "Business"
         }
     ],
     [
         {
-            "driver_id": 26,
+            "driver_id": 23,
             "tariff_name": "Comfort"
         },
         {
@@ -43,7 +43,7 @@
     ],
     [
         {
-            "driver_id": 23,
+            "driver_id": 26,
             "tariff_name": "Comfort"
         },
         {
