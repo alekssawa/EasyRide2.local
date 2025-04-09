@@ -265,3 +265,12 @@
 .star.selected img.filled {
     display: inline-block; /* Показываем заполненную звезду */
 }
+
+.feedback-section.fade-out {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.feedback-section.hidden {
+    display: none;
+}

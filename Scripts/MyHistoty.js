@@ -89,11 +89,19 @@ document.querySelectorAll('.submit-review').forEach(button => {
             console.log(data);  // Выводим ответ сервера
             if (data.success) {
                 alert('Відгук успішно надіслано!');
-                // Очистить форму
-                document.getElementById('feedback').value = '';
-                document.querySelectorAll('.rating .star img').forEach(img => {
-                    img.src = '../img/Star_Empty_rating.png';  // Сбросить все звезды на пустые
-                });
+                
+                const feedbackSection = parent;
+                const reviewTitle = parent.previousElementSibling; // <div class="line-with-text">REVIEW</div>
+            
+                // Плавное исчезновение
+                feedbackSection.classList.add('fade-out');
+                reviewTitle.classList.add('fade-out');
+            
+                setTimeout(() => {
+                    feedbackSection.remove();  // Удаляем блок
+                    reviewTitle.remove();      // Удаляем заголовок REVIEW
+                }, 500); // 500ms = время анимации
+            
             } else {
                 alert('Сталася помилка при відправці відгуку.');
             }

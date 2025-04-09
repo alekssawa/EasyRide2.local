@@ -119,6 +119,9 @@ require_once "../includes/signup.view.inc.php";
                     </div>
                 </div>
             </div>
+
+            <!-- TODO: Изменять или вовсе удалять feedback после оценки. -->
+
             <div class="line-with-text">REVIEW</div>
             <div class="feedback-section">
                 <textarea id="feedback" placeholder="Напишіть свій відгук тут..." maxlength="500"></textarea>

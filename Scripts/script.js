@@ -958,6 +958,9 @@ function placeRandomPointsOnRoads(roads, group,driversData) {
 console.log(allPoints);
 console.log(driverLocations);
 
+// TODO: Изменять водителя от поторной смены тарифа
+// FIXME: Исправить проблему с default значениями поездки, чтобы не надо было выбирать повторно
+
 // function getNearestDriverLeaflet(orderLocation, availableDrivers, map) {
 //     if (!Array.isArray(orderLocation) || orderLocation.length !== 2) {
 //         console.error("Ошибка: orderLocation не определена или имеет неверный формат.");

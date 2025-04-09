@@ -312,6 +312,9 @@ if(isset($_POST['GTime'])) {
                     </li>
                 </ul>
             </div>
+
+             <!-- TODO: Отображение стоимости проезда. -->
+
             <div id="order-button">
                 <button type="submit" onclick="GetV">Замовити таксі</button>
             </div>
