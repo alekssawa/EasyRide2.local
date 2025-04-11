@@ -42,6 +42,8 @@ require_once "includes/signup.view.inc.php";
 <?php
 session_start();
 
+// TODO: Сделать проверку почты.
+
 // Проверить, была ли отправлена переменная в POST запросе
 if(isset($_POST['GTime'])) {
     $GTime = $_POST['GTime'];

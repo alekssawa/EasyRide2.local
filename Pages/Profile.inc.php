@@ -10,7 +10,10 @@ require_once "../includes/signup.view.inc.php";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>EasyRide</title>
+
     <link href='../styles/style.css' rel="stylesheet" type="text/css" />
+    <link href='../styles/Profile.css' rel="stylesheet" type="text/css" />
+
     <script src="../Scripts/script.js" defer></script>
 </head>
 
@@ -110,6 +113,7 @@ require_once "../includes/signup.view.inc.php";
             /* Prevents line breaks */
         }
     </style>
+
     <!-- TODO: Переделать дизайн -->
     <!-- TODO: Реализовать систему хранение аватарок -->
     <div class="info-container">
@@ -138,7 +142,7 @@ require_once "../includes/signup.view.inc.php";
             </div>
         </div>
     </div>
-    <?php if ($_SESSION["user_status"] == "Driver") { ?>
+    <!-- <?php if ($_SESSION["user_status"] == "Driver") { ?>
         <div class="info-container2">
             <div class="info-box2">
                 <div class="info-item info-row">
@@ -147,7 +151,15 @@ require_once "../includes/signup.view.inc.php";
                     </div>
                 </div>
             </div>
-        <?php } ?>
+        <?php } ?> -->
+
+        <?php require_once "../includes/Driver_car.inc.php"; ?>
+
+        <div class="info-container">
+            <?php require_once "../includes/Profile_contr.inc.php"; ?>
+            <!-- <?php print_r($order) ?> -->
+
+        </div>
 </body>
 
 </html>

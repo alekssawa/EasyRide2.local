@@ -29,6 +29,8 @@ try {
 
     } elseif ($_SESSION["user_status"] == "Driver") {
 
+        // FIXME: исправить на driver все связки с клиентом
+
         $stmt = $pdo->prepare('SELECT trip_id as id, clients.client_p_i_b as client, tariffs.tariff_name as tariff, payment_amount as amount,
        trip_payment_type as payment_type, trip_start_time as start_time, trip_end_time as end_time, trip_client_start_location as start_location, trip_client_destination  as destination
         FROM triphistory

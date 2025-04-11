@@ -32,6 +32,8 @@ try {
 
 
 
+    }else{
+        echo 'Нет машины';
     }
 
     } catch (PDOException $e) {
