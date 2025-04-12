@@ -5,8 +5,10 @@ export default function HomePage() {
     <>
       <Header />
       <main>
-        <h1>Welcome to the main page!</h1>
-        {/* Остальной контент страницы */}
+        <h1>TEST</h1>
+        <h1>TEST</h1>
+        <h1>TEST</h1>
+        <h1>TEST</h1>
       </main>
     </>
   );
