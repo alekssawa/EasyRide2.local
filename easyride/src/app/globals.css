@@ -71,3 +71,13 @@ h1 {
 .register-button:hover {
   background-color: #218838;
 }
+
+
+body {
+  margin: 0;
+}
+
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}

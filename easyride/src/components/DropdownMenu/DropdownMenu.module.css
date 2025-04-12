@@ -1,0 +1,122 @@
+
+.navbar,
+.navItem,
+.iconContainer,
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.navbar {
+  background-color: #333;
+  height: 70px;
+  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.iconContainer {
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  
+  padding: 8px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+}
+
+.iconContainer:hover {
+  background-color: #545353;
+}
+
+.navItem {
+  position: relative;
+  align-items: center;
+}
+
+.dropdown {
+  background: #333;
+  color: #fff;
+  position: absolute;
+  min-width: 200px;
+  top: 125%;
+  transition: height 0.5s ease;
+  border-radius: 20px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.primaryDropdownMenu,
+.secondaryDropdownMenu {
+  padding: 10px 15px;
+  transition: all 0.5s ease;
+}
+
+/* .dropdownItem {
+  width: 170px;
+
+
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  justify-content: space-between;
+} */
+
+.dropdownItem {
+  margin: 10px 0;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;  /* Выравнивание по горизонтали */
+  align-items: center;      /* Выравнивание по вертикали */
+  width: 100%;              /* Занимает всю ширину родительского контейнера */
+  height: 100%;             /* Занимает всю высоту родительского контейнера */
+}
+
+.dropdownItemIcon {
+  margin-right: 8px;  /* Отступ между иконкой и текстом */
+}
+
+.dropdownItemIcon:last-child {
+  margin-right: 0;
+}
+
+.dropdownItem:hover {
+  background-color: rgb(73, 71, 71);
+}
+
+.dropdownItemText {
+  position: relative;
+  top: -3px;
+}
+
+/* primary Dropdown animation */
+.slide-primary-enter {
+  position: absolute;
+  transform: translateX(-100%);
+}
+.slide-primary-enter-active {
+  transform: translateX(0);
+}
+.slide-primary-exit {
+  position: absolute;
+  transform: translateX(0);
+}
+.slide-primary-exit-active {
+  transform: translateX(-100%);
+}
+
+/* secondary Dropdown animation */
+.slide-secondary-enter {
+  transform: translateX(100%);
+}
+.slide-secondary-enter-active {
+  transform: translateX(0);
+}
+.slide-secondary-exit {
+  transform: translateX(0);
+}
+.slide-secondary-exit-active {
+  transform: translateX(100%);
+}

@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Montserrat } from 'next/font/google';
+import { Montserrat } from "next/font/google";
 import "./globals.css";
+// import { SessionProvider } from "next-auth/react";
+import { Providers } from "@/components/Providers";
 
 const montserrat = Montserrat({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-montserrat',
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-montserrat",
 });
 
 export const metadata: Metadata = {
@@ -21,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={montserrat.className}>
       <body>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
