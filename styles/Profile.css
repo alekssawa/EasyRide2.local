@@ -1,9 +1,61 @@
-.profile {
+.info-box {
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    padding: 20px;
+    flex-grow: 1;
+    margin-left: 20px;
+}
+
+.info-box2 {
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    padding: 20px;
+    flex-grow: 1;
+    margin-left: 20px;
+}
+
+.info-item {
+    margin-bottom: 10px;
+}
+
+.info-label {
+    font-weight: bold;
+}
+
+.rounded-image {
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+}
+
+.info-detail {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    /* Prevents line breaks */
+}
+
+.info-detail p {
+    white-space: normal;
+}
+
+.rating-container {
+    margin-left: 20px;
+    white-space: nowrap;
+    /* Prevents line breaks */
+}
+
+.order {
     background: white;
     border-radius: 10px;
     margin: 10px auto;
     padding: 15px;
-    max-width: 450px;
+    max-width: 800px;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1); /* Мягкая тень с большим размытием */
@@ -22,61 +74,7 @@
     border: 1px solid #dcdcdc; /* Обводка толщиной 2px и серым цветом */
 }
 
-.route {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start; /* Прижимаем содержимое к левому краю */
-    font-size: 16px;
-    /*font-weight: ;*/
-}
-.route-wrapper {
-    display: flex;
-    align-items: center;
-}
-.route-icon {
-    width: calc(305px/10); /* Размер иконки */
-    height: calc(881px/10) ;
-    margin-right: 10px; /* Отступ от маршрута */
-}
-
-.arrow {
-    font-size: 20px;
-    color: #007bff;
-    margin: 5px 0;
-}
-
-.line-with-text {
-    display: flex;
-    align-items: center;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    justify-content: center;
-    text-align: center;
-    font-size: 12px;
-    color: #555555;
-    width: 100%;
-    position: relative;
-}
-
-.line-with-text::before {
-    content: '';
-    margin-right: 5px;
-    flex: 1;
-    border-bottom: 1px solid #bfbfbf;
-}
-
-.line-with-text::after {
-    content: '';
-    margin-left: 5px;
-    flex: 1;
-    border-bottom: 1px solid #bfbfbf;
-}
-
-.line-with-text span {
-    padding: 0 10px;
-    background-color: white;
-}
-.profile-details-client {
+.order-details-driver {
     display: flex;
     justify-content: space-between;
     background: white;
@@ -87,51 +85,16 @@
     border: 1px solid #dcdcdc; /* Обводка толщиной 2px и серым цветом */
 }
 
-.profile-details-driver {
+.order-details-client {
     display: flex;
     justify-content: space-between;
     background: white;
     padding: 15px;
     border-radius: 10px;
     margin-bottom: 15px;
-    /* height: 75px; Увеличиваем высоту, чтобы было достаточно места для текста */
+    height: 75px; /* Увеличиваем высоту, чтобы было достаточно места для текста */
     border: 1px solid #dcdcdc; /* Обводка толщиной 2px и серым цветом */
 }
-
-.start_location {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end; /* Сдвигает содержимое вниз */
-}
-
-.start_location span:first-child {
-    font-weight: 500;
-}
-
-.start_location span:last-child {
-    padding-top: 5px;
-    color: gray;
-    font-size: 12px;
-    margin-top: auto;
-}
-
-.destination {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end; /* Сдвигает содержимое вниз */
-}
-
-.destination span:first-child {
-    font-weight: 500;
-}
-
-.destination span:last-child {
-    padding-top: 5px;
-    color: gray;
-    font-size: 12px;
-    margin-top: auto;
-}
-
 .profile-driver {
     display: flex;
     flex-direction: column;
@@ -172,154 +135,91 @@
     align-items: flex-end;
 }
 
-.car-driver .model {
-    font-weight: 500;
-}
-
-.car-driver .plate {
-    color: gray;
-    font-size: 14px;
-    margin-top: auto;
-}
-.order-info {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Три равных столбца */
-    gap: 20px;
-    justify-items: center;
-}
-
-.order-info > div {
+.profile-card {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: space-between;
-    height: 100%;
+    align-items: center;
+    background-color: #111;
+    color: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    gap: 32px;
+    max-width: 1000px;
 }
 
-.order-info span {
-    margin: 0;
-    font-size: 16px;
+.profile-avatar img {
+    width: 100px;
+    height: 100px;
+    margin-right: 15px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #dcdcdc; 
 }
 
-.order-info .first {
-    font-weight: 500; /* Жирный текст для первого элемента */
-    display: block;
+.profile-info h2 {
+    margin: 0 0 16px 0;
+    font-size: 24px;
 }
 
-.order-info .second {
-    color: gray;
-    font-size: 14px;
-    display: block;
-}
-
-.order-info .line {
-    margin-bottom: 10px; /* Вертикальный отступ между парами */
-}
-.feedback-section {
-    /* margin-top: 30px; */
+.info-row {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.feedback-section textarea {
+    /* gap: 10px; расстояние между блоками */
+    flex-wrap: wrap; /* адаптируем к ширине */
+    justify-content: space-between; /* распределяет элементы по ширине */
     width: 100%;
-    min-height: 100px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 14px;
-    font-size: 14px;
-    font-family: 'Roboto', sans-serif;
-    color: rgb(59, 59, 59);
-    resize: none; /* Отключаем возможность ручного изменения размера */
-    overflow-y: hidden; /* Убираем полосу прокрутки */
+    padding-left: 16px;
+    padding-right: 16px;
+    box-sizing: border-box; /* чтобы padding не нарушал размеры */
 }
 
-.feedback-section .char-limit-warning {
-    color: #cf3838;
-    font-size: 12px;
-    margin-top: 5px;
-    display: none; /* Скрыть по умолчанию */
-}
-
-.feedback-section button {
-    /* align-self: center; */
-    /* width: 280px; */
-    padding: 12px 12px;
-    margin-top: 10px;
-    margin-bottom: 5px;
-    background-color: #515567;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.feedback-section button:hover {
-    background-color: #64687e;
-}
-
-.rating {
+.info-row div {
+    flex: 1; /* заставляет блоки занимать одинаковую ширину */
+    min-width: 180px; /* минимальная ширина элемента */
+    max-width: 270px; /* максимальная ширина элемента */
     display: flex;
-    gap: 10px;
-    margin-top: 10px;
+    flex-direction: column;
+}
+
+.label {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 4px;
+}
+
+.value {
+    font-size: 16px;
+    /* font-weight: 500; */
+}
+.line-with-text {
+    display: flex;
+    align-items: center;
+    padding-top: 15px;
+    padding-bottom: 15px;
     justify-content: center;
-}
-
-.rating .star img {
-    width: 35px;
-    height: auto;
-    cursor: pointer;
-}
-
-.star.selected img.empty {
-    display: none; /* Прячем пустую звезду */
-}
-
-.star.selected img.filled {
-    display: inline-block; /* Показываем заполненную звезду */
-}
-
-.feedback-section.fade-out {
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-
-.feedback-section.hidden {
-    display: none;
-}
-.info-container p {
     text-align: center;
-    font-family: "Montserrat", sans-serif;
-    font-weight: bold;
-    font-size: 20px;
-}
-.button-container {
-    display: flex;
-    /* max-width: 400px; Ограничиваем контейнер, чтобы кнопки не разъезжались слишком сильно */
-    width: 100%; /* Делаем контейнер 100% ширины родителя, если необходимо */
+    font-size: 12px;
+    color: #555555;
+    width: 100%;
+    position: relative;
 }
 
-.buttonComplete {
-    background-color: #515567; /* Цвет фона */
-    color: #ffffff;
-    padding: 12px;
-    font-size: 14px;
-    font-weight: bold;
-    font-family: "Montserrat", sans-serif;
-    cursor: pointer;
-    border: none;
-    border-radius: 6px;
-    width: 100%; /* Растягиваем кнопку на всю ширину контейнера */
-    transition: background-color 0.2s ease;
+.line-with-text::before {
+    content: '';
+    margin-right: 5px;
+    margin-left: 15px;
+    flex: 1;
+    border-bottom: 1px solid #bfbfbf;
 }
 
-.buttonComplete:hover {
-    background-color: #64687e;
+.line-with-text::after {
+    content: '';
+    margin-left: 5px;
+    margin-right: 15px;
+    flex: 1;
+    border-bottom: 1px solid #bfbfbf;
 }
 
+.line-with-text span {
+    padding: 0 10px;
+    background-color: white;
+}
