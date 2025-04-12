@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2017", // Совместимость с ES2017
+    "lib": ["dom", "dom.iterable", "esnext"], // Подключаем библиотеки для работы с DOM и современным JavaScript
+    "allowJs": true, // Разрешить использование файлов JavaScript
+    "skipLibCheck": true, // Пропуск проверок библиотек
+    "strict": true, // Включение строгой типизации
+    "noEmit": true, // Не генерировать JavaScript файлы, если не требуется
+    "esModuleInterop": true, // Включить поддержку импорта ES6 модулей
+    "module": "esnext", // Использование ES модулей
+    "moduleResolution": "bundler", // Использование резолвера для модулей в Next.js
+    "resolveJsonModule": true, // Поддержка импорта JSON файлов
+    "isolatedModules": true, // Обработка модулей отдельно
+    "jsx": "preserve", // Сохранение JSX в процессе компиляции
+    "incremental": true, // Включение инкрементальной компиляции для ускорения
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"] // Алиасы для путей
+    }
+  },
+  "include": [
+    "next-env.d.ts", // Включение Next.js env типов
+    "**/*.ts", // Включение всех TypeScript файлов
+    "**/*.tsx", // Включение всех TSX файлов
+    ".next/types/**/*.ts" // Включение типов, генерируемых Next.js
+  ],
+  "exclude": [
+    "node_modules" // Исключение node_modules из компиляции
+  ]
+}
