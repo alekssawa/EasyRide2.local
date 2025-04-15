@@ -1,5 +1,7 @@
 // components/AuthSignIn.tsx
 import { useState } from "react";
+import styles from "./Form.module.css";
+
 
 interface AuthSignInProps {
   onGoogleSignIn: (email: string) => void;
@@ -24,7 +26,7 @@ const AuthSignIn = ({ onGoogleSignIn }: AuthSignInProps) => {
 
   return (
     <>
-      <button type="button" onClick={handleGoogleLogin}>
+      <button className={`${styles.button} ${styles.google}`} type="button" onClick={handleGoogleLogin}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <img
             loading="lazy"

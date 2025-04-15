@@ -42,7 +42,7 @@ const RegisterForm = ({ defaultValues }: RegisterFormProps) => {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      <h2>Реєстрація</h2>
+      <h2 className={styles.title}>Реєстрація</h2>
 
       <input
         className={styles.input}
