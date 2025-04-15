@@ -25,7 +25,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, authType, setAuthType, r
   return (
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <button className={styles.closeButton} onClick={onClose}>×</button>
+        {/* <button className={styles.closeButton} onClick={onClose}>×</button> */}
         <div className={styles.toggleButtons}>
           <button
             className={`${styles.toggleButton} ${authType === "login" ? styles.active : ""}`}
