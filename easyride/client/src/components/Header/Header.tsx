@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom"; // Используем react-router-dom для навигации
 import styles from "./Header.module.css"; // Убедитесь, что путь правильный
+import logo from "@/assets/img/logoWhite.png";
 
 import Modal from "../../components/Modal/Modal/Modal"; // Относительный путь
 
@@ -19,13 +19,14 @@ const Header = () => {
   return (
     <>
       <header className={styles.header}>
-        <div className={styles.logo}>
-          <Link to="/">
-          <img src="/img/logoWhite.png" alt="Logo" width={150} height={50} />
-          </Link>
-        </div>
+        <div className={styles.headerContent}>
+          <div className={styles.logo}>
+            <a href="/">
+              <img src={logo} alt="Logo" width={150} height={50} />
+            </a>
+          </div>
 
-        <div className={styles.authButtons}>
+          <div className={styles.authButtons}>
             <button
               onClick={() => openModal("login")}
               className={`${styles.authButtonlogin} ${styles.loginButton}`}
@@ -39,6 +40,7 @@ const Header = () => {
               Зареєструватися
             </button>
           </div>
+        </div>
       </header>
 
       <Modal

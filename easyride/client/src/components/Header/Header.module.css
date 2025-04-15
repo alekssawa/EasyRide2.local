@@ -1,12 +1,30 @@
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* добавь, чтобы не появлялся горизонтальный скролл */
+}
 .header {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background-color: #343642;
+  padding: 0; /* убираем лишнее */
+}
+.headerContent {
   display: flex;
   justify-content: space-between;
   align-items: center;
   height: 80px;
-  padding: 40px 80px;
-  background-color: #343642;
+  /* max-width: 1200px; */
+  margin: 0 auto;
+  padding: 0 50px;
+  width: 100%;
+  box-sizing: border-box;
 }
-
 /* Логотип */
 .logo img {
   width: 200px;
@@ -16,7 +34,9 @@
 /* Контейнер для кнопок */
 .authButtons {
   display: flex;
+  flex-wrap: wrap; /* <-- помогает на маленьких экранах */
   gap: 20px;
+  max-width: 100%;  /* <-- не даст вылазить */
 }
 
 /* Стили для кнопок */
@@ -45,6 +65,7 @@
 }
 
 .loginButton:hover {
+  border: 1px solid rgba(255, 255, 255, 0.6);
   background-color: #2c2d38
 }
 
