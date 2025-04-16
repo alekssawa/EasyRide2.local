@@ -127,3 +127,7 @@ body, html {
 .google:hover {
   background-color: #c33d2f;
 }
+
+.buttonName {
+  font-weight: 500;
+}
