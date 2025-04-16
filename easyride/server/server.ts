@@ -49,7 +49,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: "/auth/callback/google",
+      callbackURL: "http://localhost:5000/auth", // ← меняем здесь
     },
     (accessToken, refreshToken, profile, done) => {
       return done(null, profile);
@@ -66,14 +66,39 @@ app.get(
 
 // 2. Обрабатывает callback от Google
 app.get(
-  "/auth/google/callback",
+  "/auth", // ← тоже меняем на /auth
   passport.authenticate("google", { failureRedirect: "/" }),
   (req: Request, res: Response) => {
     const email = (req.user as Profile).emails?.[0].value;
-    // Перенаправляем обратно на frontend
     res.redirect(`http://localhost:5173/auth-success?email=${email}`);
   }
 );
+
+// Проверка авторизации
+app.get("/api/user", (req: Request, res: Response) => {
+  if (req.isAuthenticated()) {
+    const user = req.user as Profile;
+    const email = user.emails?.[0].value;
+    const name = user.displayName; // Имя пользователя
+    const picture = user.photos?.[0].value; // URL изображения профиля
+    res.json({
+      authenticated: true,
+      email,
+      name,
+      picture,
+    });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+// Выход из сессии
+app.post("/api/logout", (req: Request, res: Response) => {
+  req.logout((err) => {
+    if (err) return res.status(500).send("Ошибка выхода");
+    res.sendStatus(200);
+  });
+});
 
 app.listen(PORT, () => {
   console.log("Server start", { PORT });

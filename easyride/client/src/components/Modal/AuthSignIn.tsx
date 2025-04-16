@@ -2,7 +2,6 @@
 
 import styles from "./Form.module.css";
 
-
 const AuthSignIn = () => {
   const handleGoogleLogin = () => {
     window.location.href = "http://localhost:5000/auth/google";
@@ -10,7 +9,11 @@ const AuthSignIn = () => {
 
   return (
     <>
-      <button className={`${styles.button} ${styles.google}`} type="button" onClick={handleGoogleLogin}>
+      <button
+        className={`${styles.button} ${styles.google}`}
+        type="button"
+        onClick={handleGoogleLogin}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <img
             loading="lazy"
