@@ -11,6 +11,7 @@ interface UserData {
   email?: string;
   name?: string;
   picture?: string;
+  googleId?: string;
 }
 
 const Header = () => {
@@ -64,6 +65,8 @@ const Header = () => {
   };
 
   if (user === null) return <p>Загрузка...</p>;
+
+  console.log(user);
 
   return (
     <>

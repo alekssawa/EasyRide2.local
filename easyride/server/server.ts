@@ -6,6 +6,8 @@ import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 import { Request, Response } from "express";
 
+import pool from "./lib/db.js"; // ← если ESM
+
 dotenv.config();
 
 const app = express();
@@ -49,13 +51,22 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: "http://localhost:5000/auth", // ← меняем здесь
+      callbackURL: "http://localhost:5000/auth",
     },
     (accessToken, refreshToken, profile, done) => {
-      return done(null, profile);
+      // Явно укажем, что хотим сохранить
+      const user = {
+        googleId: profile.id,
+        email: profile.emails?.[0].value,
+        name: profile.displayName,
+        picture: profile.photos?.[0].value,
+      };
+
+      return done(null, user);
     }
   )
 );
+
 
 app.get(
   "/auth/google",
@@ -74,30 +85,44 @@ app.get(
   }
 );
 
-// Проверка авторизации
-app.get("/api/user", (req: Request, res: Response) => {
-  if (req.isAuthenticated()) {
-    const user = req.user as Profile;
-    const email = user.emails?.[0].value;
-    const name = user.displayName; // Имя пользователя
-    const picture = user.photos?.[0].value; // URL изображения профиля
-    res.json({
-      authenticated: true,
-      email,
-      name,
-      picture,
-    });
-  } else {
-    res.json({ authenticated: false });
-  }
-});
-
 // Выход из сессии
 app.post("/api/logout", (req: Request, res: Response) => {
   req.logout((err) => {
     if (err) return res.status(500).send("Ошибка выхода");
     res.sendStatus(200);
   });
+});
+
+// Проверка авторизации
+app.get("/api/user", (req: Request, res: Response) => {
+  if (req.isAuthenticated()) {
+    const user = req.user as {
+      googleId: string;
+      email: string;
+      name: string;
+      picture: string;
+    };
+
+    res.json({
+      authenticated: true,
+      googleId: user.googleId,
+      email: user.email,
+      name: user.name,
+      picture: user.picture,
+    });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+app.get("/api/db-users", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query("SELECT * FROM clients");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Ошибка получения пользователей из БД", error);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 app.listen(PORT, () => {
