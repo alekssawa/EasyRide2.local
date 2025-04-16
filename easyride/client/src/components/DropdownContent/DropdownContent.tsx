@@ -5,15 +5,19 @@ interface DropdownContentProps {
   children: ReactNode;
   open?: boolean;
   top?: number;
+  buttonWidth: number; // Получаем width из родительского компонента
 }
 
 const DropdownContent = forwardRef<HTMLDivElement, DropdownContentProps>(
-  ({ children, open, top }, ref) => {
+  ({ children, open, top, buttonWidth }, ref) => {
     return (
       <div
-        className={`dropdown-content ${open ? "content-open" : ""}`}
-        style={{ top: top !== undefined ? `${top}px` : "100%" }}
         ref={ref}
+        className={`dropdown-content ${open ? "content-open" : ""}`}
+        style={{
+          top: top !== undefined ? `${top}px` : "100%",
+          width: `${buttonWidth}px`, // Устанавливаем ширину контента равной ширине кнопки
+        }}
       >
         {children}
       </div>
@@ -21,7 +25,6 @@ const DropdownContent = forwardRef<HTMLDivElement, DropdownContentProps>(
   }
 );
 
-// Чтобы избежать предупреждений в dev-режиме
 DropdownContent.displayName = "DropdownContent";
 
 export default DropdownContent;

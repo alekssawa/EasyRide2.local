@@ -1,10 +1,7 @@
 import { useEffect, useState, useRef, ReactNode } from "react";
-
 import DropdownButton from "../DropdownButton/DropdownButton";
 import DropdownContent from "../DropdownContent/DropdownContent";
-
 import "./Dropdown.css";
-
 
 interface DropdownProps {
   buttonText: ReactNode;
@@ -14,6 +11,7 @@ interface DropdownProps {
 const Dropdown = ({ buttonText, content }: DropdownProps) => {
   const [open, setOpen] = useState(false);
   const [dropdownTop, setDropdownTop] = useState<number | null>(0);
+  const [buttonWidth, setButtonWidth] = useState<number>(0);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
@@ -22,19 +20,26 @@ const Dropdown = ({ buttonText, content }: DropdownProps) => {
   const toggleDropdown = () => {
     if (!open) {
       const spaceRemaining =
-        window.innerHeight -
-        (buttonRef.current?.getBoundingClientRect().bottom || 0);
+        window.innerHeight - (buttonRef.current?.getBoundingClientRect().bottom || 0);
       const contentHeight = contentRef.current?.clientHeight || 0;
 
       const topPosition =
         spaceRemaining > contentHeight
           ? null
-          : -(contentHeight - spaceRemaining); // move up by height clipped by window
+          : -(contentHeight - spaceRemaining);
+
       setDropdownTop(topPosition);
     }
 
     setOpen((prev) => !prev);
   };
+
+  useEffect(() => {
+    if (buttonRef.current) {
+      setButtonWidth(buttonRef.current.offsetWidth); // Устанавливаем ширину кнопки
+      console.log("Button width:", buttonRef.current.offsetWidth); // Лог для проверки
+    }
+  }, [open]);
 
   useEffect(() => {
     const handler = (event: MouseEvent) => {
@@ -57,7 +62,12 @@ const Dropdown = ({ buttonText, content }: DropdownProps) => {
       <DropdownButton ref={buttonRef} toggle={toggleDropdown} open={open}>
         {buttonText}
       </DropdownButton>
-      <DropdownContent ref={contentRef} top={dropdownTop ?? undefined} open={open}>
+      <DropdownContent
+        ref={contentRef}
+        top={dropdownTop ?? undefined}
+        open={open}
+        buttonWidth={buttonWidth} // Передаем ширину кнопки
+      >
         {content}
       </DropdownContent>
     </div>

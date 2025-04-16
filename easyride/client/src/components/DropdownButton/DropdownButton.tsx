@@ -15,7 +15,7 @@ const DropdownButton = forwardRef<HTMLDivElement, DropdownButtonProps>(
     return (
       <div
         onClick={toggle}
-        className={`${styles.buttonName} ${styles.authButtonlogin} ${styles.loginButton} ${open ? "button-open" : ""}`}
+        className={`${styles.buttonName} ${styles.authButtonlogin} ${styles.loginButton}`}
         ref={ref}
       >
         {children}
