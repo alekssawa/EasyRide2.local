@@ -37,7 +37,7 @@ const Dropdown = ({ buttonText, content }: DropdownProps) => {
   useEffect(() => {
     if (buttonRef.current) {
       setButtonWidth(buttonRef.current.offsetWidth); // Устанавливаем ширину кнопки
-      console.log("Button width:", buttonRef.current.offsetWidth); // Лог для проверки
+      // console.log("Button width:", buttonRef.current.offsetWidth); // Лог для проверки
     }
   }, [open]);
 

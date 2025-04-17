@@ -1,21 +1,19 @@
 {
-    "compilerOptions": {
-      "module": "ESNext",          // Используем ES модули
-      "moduleResolution": "Node",  // Для корректного разрешения путей модулей
-      "target": "ESNext",          // Современные возможности JS
-      "outDir": "./dist",          // Папка для сборки
-      "esModuleInterop": true,     // Для совместимости с CommonJS
-      "strict": true,              // Включаем строгую типизацию
-      "skipLibCheck": true,        // Пропускаем проверку библиотек
-      "forceConsistentCasingInFileNames": true, // Для корректной работы на разных ОС
-      "baseUrl": ".",              // Указываем базовый путь
-      "paths": {
-        "*": ["node_modules/*", "src/types/*"]  // Если нужно работать с типами
-      }
-    },
-    "include": [
-      "server.ts",                 // Включаем корневые файлы
-      "lib/**/*.ts"                // Включаем все файлы в папке lib
-    ]
-  }
-  
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "bundler",         // ✅ ОБЯЗАТЕЛЬНО
+    "noEmit": true,                        // ✅ ОБЯЗАТЕЛЬНО
+    "allowImportingTsExtensions": true,    // ✅ для импорта с .ts
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "."
+  },
+  "include": [
+    "server.ts",
+    "lib/**/*.ts",
+    "routes/**/*.ts"                       // ✅ добавить папку routes
+  ]
+}
