@@ -10,10 +10,17 @@ const AuthSignIn = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [authType, setAuthType] = useState<"login" | "register">("login");
+  const [registerData, setRegisterData] = useState<{ name?: string; email?: string; googleId?: string }>({});
 
-  const openModal = (type: "login" | "register") => {
+  const openModal = (type: "login" | "register", data?: { name?: string; email?: string; googleId?: string }) => {
     setAuthType(type);
     setModalOpen(true);
+    if (data) {
+      setRegisterData(data); // Сохраняем данные для регистрации
+      console.log("Received registerData in AuthSignIn:", registerData);
+    }else{
+      console.log("error registerData in AuthSignIn:");
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -25,11 +32,15 @@ const AuthSignIn = () => {
     const email = query.get("email");
     const name = query.get("name");
     const picture = query.get("picture");
+    const googleId = query.get("googleId"); 
     const needsRegistration = query.get("needsRegistration");
+
+    
 
     if (needsRegistration === "true") {
       console.log(needsRegistration);
-      openModal("register");
+      // alert(googleId);
+      openModal("register", { name:name || undefined, email:email || undefined, googleId: googleId || undefined });
     }
 
     if (email || name || picture) {
@@ -67,6 +78,7 @@ const AuthSignIn = () => {
         onClose={() => setModalOpen(false)}
         authType={authType}
         setAuthType={setAuthType}
+        registerData={registerData} // Передаем registerData в Modal
         openModal={openModal}
       />
     </>

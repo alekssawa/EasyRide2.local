@@ -7,12 +7,14 @@ interface ModalProps {
   onClose: () => void;
   authType: "login" | "register";
   setAuthType: (authType: "login" | "register") => void;
-  registerData?: { name?: string; email?: string };
-  openModal: (type: "login" | "register", data?: { name?: string; email?: string }) => void; // Добавить
+  registerData?: { name?: string; email?: string; googleId?: string };
+  openModal: (type: "login" | "register", data?: { name?: string; email?: string; googleId?: string }) => void; // Добавить
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, authType, setAuthType, registerData, openModal }) => {
   if (!isOpen) return null; // Если окно закрыто, ничего не показываем
+
+  console.log("Received registerData in Modal:", registerData);
 
   const handleLoginClick = () => {
     setAuthType("login");  // Устанавливаем тип авторизации
@@ -43,7 +45,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, authType, setAuthType, r
         {authType === "login" ? (
           <AuthForm openModal={openModal} />  // Передаем openModal в AuthForm
         ) : (
-          <RegisterForm defaultValues={registerData} />
+          <RegisterForm defaultValues={registerData} setAuthType={setAuthType} />
         )}
       </div>
     </div>

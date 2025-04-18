@@ -23,6 +23,7 @@ const Header = () => {
   const [registerData, setRegisterData] = useState<{
     name?: string;
     email?: string;
+    googleId?: string;
   }>({});
 
   const location = useLocation();
@@ -46,7 +47,7 @@ const Header = () => {
     }
 
     if (email || name) {
-      setRegisterData({ name: name || "", email: email || "" });
+      setRegisterData({ name: name || "", email: email || "", googleId: googleId || "" });
     }
 
     if (needsReg || email) {
