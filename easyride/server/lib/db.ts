@@ -1,5 +1,5 @@
-import dotenv from "dotenv";
-import pg from "pg";
+import dotenv from 'dotenv';
+import pg from 'pg';
 
 dotenv.config();
 
@@ -7,22 +7,21 @@ const { Pool } = pg;
 
 const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
 
-// Проверка наличия переменных окружения
-if (!DB_HOST || !DB_PORT || !DB_USER || !DB_PASSWORD || !DB_NAME) {
-  throw new Error("Не все переменные окружения заданы");
-}
-
+// Конфигурация пула соединений
 const pool = new Pool({
   host: DB_HOST,
-  port: Number(DB_PORT),
+  port: parseInt(DB_PORT || '5432'),
   user: DB_USER,
   password: DB_PASSWORD,
   database: DB_NAME,
+  max: 20, // максимальное количество клиентов в пуле
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
-// Пример теста подключения
-pool.connect()
-  .then(() => console.log("Подключение к базе данных установлено"))
-  .catch((error) => console.error("Ошибка подключения к базе данных", error));
+// Тестовое подключение при старте
+pool.query('SELECT NOW()')
+  .then(() => console.log('✅ Подключение к PostgreSQL установлено'))
+  .catch(err => console.error('❌ Ошибка подключения к PostgreSQL:', err));
 
 export default pool;

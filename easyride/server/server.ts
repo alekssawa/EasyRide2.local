@@ -5,9 +5,12 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 
-// import registerRouter from "./routes/register.ts";
+// import registerRouter from "./routes/client.ts";
 
 import testRouter from './routes/test-router.ts';
+
+import clientsRoutes from './routes/clientsRoutes.ts';
+
 
 import pool from "./lib/db.js"; // ← если ESM
 
@@ -37,7 +40,9 @@ app.use(passport.session());
 
 // app.use("/api/register", registerRouter);
 
-app.use("/api/regs", testRouter);
+// app.use("/api/regs", testRouter);
+
+app.use('/api', clientsRoutes); 
 
 
 passport.serializeUser(
