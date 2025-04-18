@@ -1,2 +1,3 @@
 node_modules
 easyride/server/.env
+easyride/server/node_modules
