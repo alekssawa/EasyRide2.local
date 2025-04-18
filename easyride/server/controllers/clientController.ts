@@ -71,13 +71,3 @@ export const updateClient = async (req: Request, res: Response): Promise<void> =
       res.status(500).json({ error: err.message });
     }
   };
-
-export const deleteClient = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
-  try {
-    await pool.query('DELETE FROM clients WHERE id = $1', [id]);
-    res.status(204).send();
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-};
