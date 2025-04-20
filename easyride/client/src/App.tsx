@@ -2,12 +2,14 @@ import { useState } from "react";
 import "./styles/App.css";
 
 import Header from "./components/Header/Header";
+import { AuthProvider } from "./context/authContext";
 
 function App() {
   const [count, setCount] = useState(0);
 
   return (
     <>
+    <AuthProvider>
       <Header />
       <main>
         <h1>Vite + React + Express</h1>
@@ -17,6 +19,7 @@ function App() {
           </button>
         </div>
       </main>
+      </AuthProvider>
     </>
   );
 }

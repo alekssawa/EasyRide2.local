@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite"
+    "dev": "vite",
+    "tree-cli":"npx tree-cli -l 10 --ignore node_modules"
   },
   "dependencies": {
     "axios": "^1.8.4",

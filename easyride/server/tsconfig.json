@@ -9,11 +9,12 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "typeRoots": ["./types", "./node_modules/@types"] // ✅ ДОБАВЬ ЭТО
   },
   "include": [
     "server.ts",
     "lib/**/*.ts",
     "routes/**/*.ts"                       // ✅ добавить папку routes
-  ]
+, "types/express-session.d.ts"  ]
 }

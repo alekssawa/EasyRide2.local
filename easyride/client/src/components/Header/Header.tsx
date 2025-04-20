@@ -6,19 +6,11 @@ import logo from "@/assets/img/logoWhite.png";
 import Modal from "../../components/Modal/Modal/Modal";
 import Dropdown from "../Dropdown/Dropdown";
 import DropdownItem from "../DropdownItem/DropdownItem";
-
-interface UserData {
-  authenticated: boolean;
-  email?: string;
-  name?: string;
-  picture?: string;
-  googleId?: string;
-}
+import { useAuth } from "../../context/authContext"; // Исправленный путь
 
 const Header = () => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [authType, setAuthType] = useState<"login" | "register">("login");
-  const [user, setUser] = useState<UserData | null>(null);
+  const [authType, setAuthType] = useState<"login" | "register" | null>(null);
   const [needsRegistration, setNeedsRegistration] = useState(false);
   const [registerData, setRegisterData] = useState<{
     name?: string;
@@ -26,6 +18,7 @@ const Header = () => {
     googleId?: string;
   }>({});
 
+  const { user, setUser } = useAuth(); // Используем useAuth для получения данных из контекста
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -64,7 +57,8 @@ const Header = () => {
         });
         if (response.ok) {
           const data = await response.json();
-          setUser(data);
+          console.log(data);
+          setUser(data); // Обновляем данные пользователя в контексте
         } else {
           setUser({ authenticated: false });
         }
@@ -75,7 +69,7 @@ const Header = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, [setUser]);
 
   // ⛳ Открываем регистрацию, если нужно
   useEffect(() => {
@@ -86,10 +80,12 @@ const Header = () => {
   }, [user, needsRegistration, registerData]);
 
   const openModal = (
-    type: "login" | "register",
+    type: "login" | "register" | null,
     data?: { name?: string; email?: string }
   ) => {
-    setAuthType(type);
+    if (type) {
+      setAuthType(type); // Убираем null для setAuthType
+    }
     if (data) {
       setRegisterData(data);
     }
@@ -103,7 +99,7 @@ const Header = () => {
         credentials: "include",
       });
       if (response.ok) {
-        setUser({ authenticated: false });
+        setUser({ authenticated: false }); // Обновляем состояние в контексте при выходе
       } else {
         console.error("Failed to logout");
       }
@@ -113,6 +109,8 @@ const Header = () => {
   };
 
   if (user === null) return <p>Загрузка...</p>;
+
+  console.log(user);
 
   return (
     <>
@@ -125,7 +123,7 @@ const Header = () => {
           </div>
 
           <div className={styles.authButtons}>
-            {user.authenticated && !setNeedsRegistration ? (
+            {user.authenticated && !needsRegistration ? (
               <Dropdown
                 buttonText={user.name}
                 content={
@@ -159,11 +157,11 @@ const Header = () => {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => setModalOpen(false)} // Закрываем модалку при вызове onClose
         authType={authType}
         setAuthType={setAuthType}
-        registerData={registerData} // <-- тут
-        openModal={openModal}
+        registerData={registerData}
+        openModal={openModal} // передаем openModal в Modal
       />
     </>
   );

@@ -17,7 +17,6 @@ export const checkClient = async (req: Request, res: Response): Promise<void> =>
 
   try {
     if (provider === "local") {
-      // 1. Получаем клиента по email
       const result = await pool.query(
         `SELECT * FROM clients WHERE client_email = $1 AND client_provider = 'local'`,
         [email]
@@ -29,23 +28,29 @@ export const checkClient = async (req: Request, res: Response): Promise<void> =>
       }
 
       const client = result.rows[0];
-
-      // 2. Сравниваем пароли
-      console.log("Пароль из запроса:", password);
-      console.log("Хеш из БД:", client.client_pwd);
       const isMatch = await bcrypt.compare(password, client.client_pwd);
-      console.log(isMatch);
 
       if (!isMatch) {
         res.status(401).json({ message: "Невірний пароль" });
         return;
       }
 
-      // 3. Пароль совпал — авторизация успешна
-      res.status(200).json(client);
+      // Устанавливаем сессию (автоматическая сериализация)
+      req.login(client, (err) => {
+        if (err) {
+          res.status(500).json({ error: "Помилка сесії" });
+        } else {
+          res.status(200).json({
+            authenticated: true,
+            client_id: client.client_id,
+            email: client.client_email,
+            name: client.client_p_i_b,
+            provider: client.client_provider,
+          });
+        }
+      });
 
     } else if (provider === "google") {
-      // Проверка по google_id
       const result = await pool.query(
         `SELECT * FROM clients WHERE client_google_id = $1 AND client_provider = 'google'`,
         [googleId]
@@ -56,11 +61,9 @@ export const checkClient = async (req: Request, res: Response): Promise<void> =>
       } else {
         res.status(200).json(result.rows[0]);
       }
-
     } else {
       res.status(400).json({ error: "Невідомий тип провайдера" });
     }
-
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

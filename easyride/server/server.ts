@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import cors from "cors";
-import session from "express-session";
+import sessionMiddleware from "./lib/sessionConfig.ts"; // импортируем сессию
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 
@@ -10,7 +10,6 @@ import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 import testRouter from './routes/test-router.ts';
 
 import clientsRoutes from './routes/clientsRoutes.ts';
-
 
 import pool from "./lib/db.js"; // ← если ESM
 
@@ -26,13 +25,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.use(
-  session({
-    secret: "your-secret",
-    resave: false,
-    saveUninitialized: false,
-  })
-);
+app.use(sessionMiddleware);
 
 app.use(express.json());
 app.use(passport.initialize());
@@ -120,6 +113,8 @@ app.get(
       needsRegistration: boolean;
     };
 
+    req.session.user = user;
+
     res.redirect(
       `http://localhost:5173/auth-success?${new URLSearchParams({
         googleId: user.googleId,
@@ -135,21 +130,25 @@ app.get(
 // Выход из сессии
 app.post("/api/logout", (req: Request, res: Response) => {
   req.logout((err) => {
-    if (err) return res.status(500).send("Ошибка выхода");
-    res.sendStatus(200);
+    if (err) {
+      return res.status(500).send("Ошибка выхода");
+    }
+
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).send("Ошибка уничтожения сессии");
+      }
+
+      res.clearCookie("connect.sid"); // или другой, если ты менял имя куки
+      res.sendStatus(200);
+    });
   });
 });
 
 // Проверка авторизации
 app.get("/api/user", (req: Request, res: Response) => {
-  if (req.isAuthenticated()) {
-    const user = req.user as {
-      googleId: string;
-      email: string;
-      name: string;
-      picture: string;
-    };
-
+  if (req.session.user) {
+    const user = req.session.user;
     res.json({
       authenticated: true,
       googleId: user.googleId,
@@ -173,5 +172,5 @@ app.get("/api/db-users", async (req: Request, res: Response) => {
 });
 
 app.listen(PORT, () => {
-  console.log("Server start", { PORT });
+  console.log("Server started on", { PORT });
 });
