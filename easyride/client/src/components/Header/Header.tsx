@@ -23,6 +23,7 @@ const Header = () => {
   const navigate = useNavigate();
 
   // Функции для перехода на страницы
+  const goToHome = () => navigate("/");
   const goToProfile = () => navigate("/profile");
   const goToMyOrder = () => navigate("/my-order");
   const goToMyOrderHistory = () => navigate("/my-order-history");
@@ -127,7 +128,7 @@ const Header = () => {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.logo}>
-            <a href="/">
+            <a onClick={goToHome}>
               <img src={logo} alt="Logo" width={150} height={50} />
             </a>
           </div>

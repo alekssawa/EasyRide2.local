@@ -5,11 +5,11 @@ import sessionMiddleware from "./lib/sessionConfig.ts"; // импортируе�
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 
-// import registerRouter from "./routes/client.ts";
 
-import testRouter from './routes/test-router.ts';
+import clientsRoutes from './routes/clients.routes.ts';
+import orderRoutes from './routes/order.routes.ts';
 
-import clientsRoutes from './routes/clientsRoutes.ts';
+
 
 import pool from "./lib/db.js"; // ← если ESM
 
@@ -31,11 +31,9 @@ app.use(express.json());
 app.use(passport.initialize());
 app.use(passport.session());
 
-// app.use("/api/register", registerRouter);
-
-// app.use("/api/regs", testRouter);
 
 app.use('/api', clientsRoutes); 
+app.use('/api/order', orderRoutes);
 
 
 passport.serializeUser(
@@ -146,9 +144,21 @@ app.post("/api/logout", (req: Request, res: Response) => {
 });
 
 // Проверка авторизации
+
 app.get("/api/user", (req: Request, res: Response) => {
-  if (req.session.user) {
+  try {
+    if (!req.session.user) {
+      console.warn("Пользователь не найден в сессии");
+      res.status(401).json({
+        authenticated: false,
+        message: "Пользователь не найден в сессии",
+      });
+      return; // Завершаем выполнение функции после отправки ответа
+    }
+
     const user = req.session.user;
+
+    // Отправка ответа, если пользователь найден
     res.json({
       authenticated: true,
       googleId: user.googleId,
@@ -156,10 +166,15 @@ app.get("/api/user", (req: Request, res: Response) => {
       name: user.name,
       picture: user.picture,
     });
-  } else {
-    res.json({ authenticated: false });
+    return; // Завершаем выполнение функции после отправки ответа
+
+  } catch (error) {
+    console.error("Ошибка при проверке авторизации:", error);
+    res.status(500).json({ authenticated: false, message: "Ошибка сервера" });
+    return; // Завершаем выполнение функции после отправки ответа
   }
 });
+
 
 app.get("/api/db-users", async (req: Request, res: Response) => {
   try {

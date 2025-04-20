@@ -1,11 +1,10 @@
-import { Request, Response } from 'express';
-import pool from '../lib/db.js';
-
-import bcrypt from 'bcrypt';
+import { Request, Response } from "express";
+import pool from "../lib/db.js";
+import bcrypt from "bcrypt";
 
 export const getClients = async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query('SELECT * FROM clients');
+    const result = await pool.query("SELECT * FROM clients");
     res.status(200).json(result.rows);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -13,15 +12,11 @@ export const getClients = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
-  const { provider, email, password, googleId } = req.body;
+  const { provider, email, password, googleId, name, picture } = req.body;
 
   try {
     if (provider === "local") {
-      // Проверка локального пользователя
-      const result = await pool.query(
-        `SELECT * FROM clients WHERE client_email = $1`,
-        [email]
-      );
+      const result = await pool.query(`SELECT * FROM clients WHERE client_email = $1`, [email]);
 
       if (result.rows.length === 0) {
         res.status(404).json({ message: "Клієнта не знайдено" });
@@ -29,66 +24,82 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       }
 
       const client = result.rows[0];
+      const isMatch = await bcrypt.compare(password, client.client_pwd);
 
-      // Если клиент найден с другим провайдером, но логиним через локальный вход
-      if (client.client_provider === 'google') {
-        // Важно: даже если провайдер google, продолжаем авторизацию как local
-        const isMatch = await bcrypt.compare(password, client.client_pwd);
-
-        if (!isMatch) {
-          res.status(401).json({ message: "Невірний пароль" });
-          return;
-        }
-
-        // Устанавливаем сессию, учитывая, что провайдер — google, но логин через локальную авторизацию
-        req.login(client, (err) => {
-          if (err) {
-            res.status(500).json({ error: "Помилка сесії" });
-          } else {
-            res.status(200).json({
-              authenticated: true,
-              client_id: client.client_id,
-              email: client.client_email,
-              name: client.client_p_i_b,
-              provider: client.client_provider,  // Несмотря на то, что в базе google, авторизация как local
-            });
-          }
-        });
-
-      } else {
-        const isMatch = await bcrypt.compare(password, client.client_pwd);
-
-        if (!isMatch) {
-          res.status(401).json({ message: "Невірний пароль" });
-          return;
-        }
-
-        req.login(client, (err) => {
-          if (err) {
-            res.status(500).json({ error: "Помилка сесії" });
-          } else {
-            res.status(200).json({
-              authenticated: true,
-              client_id: client.client_id,
-              email: client.client_email,
-              name: client.client_p_i_b,
-              provider: client.client_provider,
-            });
-          }
-        });
+      if (!isMatch) {
+        res.status(401).json({ message: "Невірний пароль" });
+        return;
       }
 
+      req.login(client, (err) => {
+        if (err) {
+          res.status(500).json({ error: "Помилка сесії" });
+        } else {
+          req.session.user = {
+            googleId: client.client_google_id || "",
+            email: client.client_email,
+            name: client.client_p_i_b,
+            picture: "",
+            needsRegistration: false,
+          };
+
+          req.session.save((err) => {
+            if (err) {
+              console.error("Помилка збереження сесії:", err);
+              res.status(500).json({ error: "Помилка збереження сесії" });
+            } else {
+              res.status(200).json({
+                authenticated: true,
+                client_id: client.client_id,
+                email: client.client_email,
+                name: client.client_p_i_b,
+                provider: client.client_provider,
+              });
+            }
+          });
+        }
+      });
     } else if (provider === "google") {
-      // Проверка через Google ID
       const result = await pool.query(
         `SELECT * FROM clients WHERE client_google_id = $1 AND client_provider = 'google'`,
         [googleId]
       );
 
       if (result.rows.length === 0) {
-        res.status(404).json({ message: "Клієнта не знайдено" });
+        // Сохраняем в сессию, что пользователь должен пройти регистрацию
+        req.session.user = {
+          googleId,
+          email,
+          name,
+          picture: picture || "",
+          needsRegistration: true,
+        };
+
+        req.session.save((err) => {
+          if (err) {
+            res.status(500).json({ error: "Помилка сесії" });
+          } else {
+            res.status(200).json({ needsRegistration: true });
+          }
+        });
       } else {
-        res.status(200).json(result.rows[0]);
+        const client = result.rows[0];
+
+        req.session.user = {
+          googleId: client.client_google_id,
+          email: client.client_email,
+          name: client.client_p_i_b,
+          picture: picture || "",
+          needsRegistration: false,
+        };
+
+        res.status(200).json({
+          authenticated: true,
+          client_id: client.client_id,
+          email: client.client_email,
+          name: client.client_p_i_b,
+          provider: client.client_provider,
+        });
       }
     } else {
       res.status(400).json({ error: "Невідомий тип провайдера" });
@@ -98,18 +109,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-
 export const getClientById = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query(
-      `SELECT * FROM clients WHERE client_id = $1`,
-      [id]
-    );
+    const result = await pool.query(`SELECT * FROM clients WHERE client_id = $1`, [id]);
 
     if (result.rows.length === 0) {
-      res.status(404).json({ message: 'Клієнта не знайдено' });
+      res.status(404).json({ message: "Клієнта не знайдено" });
     } else {
       res.status(200).json(result.rows[0]);
     }
@@ -119,11 +126,10 @@ export const getClientById = async (req: Request, res: Response): Promise<void> 
 };
 
 export const createClient = async (req: Request, res: Response): Promise<void> => {
-    const { name, phone, email, password, provider, googleId } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
+  const { name, phone, email, password, provider, googleId } = req.body;
+  const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+
   try {
-    console.log("User post for back:", { googleId, email, name, password, provider});
     const result = await pool.query(
       `INSERT INTO clients (
         client_p_i_b,
@@ -134,8 +140,9 @@ export const createClient = async (req: Request, res: Response): Promise<void> =
         client_google_id
       ) VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING client_id, client_email`,
-      [name, phone, email, hashedPassword || null, provider, googleId || null]
+      [name, phone, email, hashedPassword, provider, googleId || null]
     );
+
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -143,39 +150,72 @@ export const createClient = async (req: Request, res: Response): Promise<void> =
 };
 
 export const updateClient = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    const { name, phone, email, password, provider, googleId } = req.body;
-  
-    try {
-      // Хешируем пароль, если он был передан
-      let hashedPassword: string | undefined;
-      if (password) {
-        hashedPassword = await bcrypt.hash(password, 12);
-      }
-  
-      const result = await pool.query(
-        `UPDATE clients 
-         SET client_p_i_b = $1, client_phone_number = $2, client_email = $3, 
-             client_pwd = $4, client_provider = $5, client_google_id = $6 
-         WHERE client_id = $7 
-         RETURNING client_id, client_email`,
-        [
-          name,
-          phone,
-          email,
-          hashedPassword || null, // если пароль не передан, не обновляем его
-          provider,
-          googleId || null,
-          id
-        ]
-      );
-  
-      if (result.rows.length === 0) {
-        res.status(404).json({ error: 'Client not found' });
-      } else {
-        res.status(200).json(result.rows[0]);
-      }
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+  const { id } = req.params;
+  const { name, phone, email, password, provider, googleId } = req.body;
+
+  try {
+    let hashedPassword: string | undefined;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 12);
     }
-  };
+
+    const result = await pool.query(
+      `UPDATE clients 
+       SET client_p_i_b = $1, client_phone_number = $2, client_email = $3, 
+           client_pwd = $4, client_provider = $5, client_google_id = $6 
+       WHERE client_id = $7 
+       RETURNING client_id, client_email`,
+      [
+        name,
+        phone,
+        email,
+        hashedPassword || null,
+        provider,
+        googleId || null,
+        id,
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: "Client not found" });
+    } else {
+      res.status(200).json(result.rows[0]);
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getOrdersByClientId = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { clientId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+         order_id,
+         order_payment_id,
+         order_driver_id,
+         order_tariff_id,
+         order_order_time,
+         order_client_start_location,
+         order_client_destination,
+         order_payment_type,
+         order_order_status,
+         order_distance
+       FROM orders
+       WHERE order_client_id = $1`,
+      [clientId]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ message: "Поїздок для клієнта не знайдено" });
+    } else {
+      res.status(200).json(result.rows);
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

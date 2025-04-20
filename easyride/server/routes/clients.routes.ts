@@ -17,7 +17,7 @@ router.get('/clients', isAuthenticated, getClients);
 router.get('/client/:id', isAuthenticated, getClientById);
 router.post('/clients', createClient);
 router.post('/login', login);
-router.put('/clients/:id', updateClient);
+router.put('/clients/:id', isAuthenticated, updateClient);
 
 
 export default router;
