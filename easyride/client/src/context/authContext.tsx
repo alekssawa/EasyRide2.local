@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 interface UserData {
   authenticated: boolean;
+  userId?: string;
   email?: string;
   name?: string;
   picture?: string;

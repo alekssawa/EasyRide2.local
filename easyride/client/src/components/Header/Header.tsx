@@ -22,6 +22,12 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Функции для перехода на страницы
+  const goToProfile = () => navigate("/profile");
+  const goToMyOrder = () => navigate("/my-order");
+  const goToMyOrderHistory = () => navigate("/my-order-history");
+  const goToSettings = () => navigate("/settings");
+
   // Получаем query параметры и обрабатываем
   useEffect(() => {
     const query = new URLSearchParams(location.search);
@@ -40,7 +46,11 @@ const Header = () => {
     }
 
     if (email || name) {
-      setRegisterData({ name: name || "", email: email || "", googleId: googleId || "" });
+      setRegisterData({
+        name: name || "",
+        email: email || "",
+        googleId: googleId || "",
+      });
     }
 
     if (needsReg || email) {
@@ -128,9 +138,10 @@ const Header = () => {
                 buttonText={user.name}
                 content={
                   <>
-                    <DropdownItem>Profile</DropdownItem>
-                    <DropdownItem>Settings</DropdownItem>
-                    <DropdownItem>Notifications</DropdownItem>
+                    <DropdownItem onClick={goToProfile}>Profile</DropdownItem>
+                    <DropdownItem onClick={goToMyOrder}>My Order</DropdownItem>
+                    <DropdownItem onClick={goToMyOrderHistory}>My History</DropdownItem>
+                    <DropdownItem onClick={goToSettings}>Settings</DropdownItem>
                     <DropdownItem onClick={handleLogout}>Вийти</DropdownItem>
                   </>
                 }

@@ -1,0 +1,26 @@
+/* styles/Profile.css */
+body#profile {
+    padding: 0;
+    margin: 0;
+    font-family: "Montserrat", sans-serif;
+    background-color: white;
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .profileClient {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  
+  .profileClient span:first-child {
+    font-weight: 500;
+  }
+  
+  .profileClient span:last-child {
+    color: gray;
+    font-size: 14px;
+    margin-top: auto;
+  }
+  

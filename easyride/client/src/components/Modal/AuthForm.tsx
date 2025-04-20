@@ -20,7 +20,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/check-client",
+        "http://localhost:5000/api/login",
         { provider: "local", email, password },
         { withCredentials: true }
       );
@@ -31,6 +31,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
         // Добавляем данные пользователя в контекст
         setUser({
           authenticated: true,
+          userId: response.data.client_id,
           email: response.data.email,
           name: response.data.name,
           picture: response.data.picture,

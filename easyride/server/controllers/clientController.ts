@@ -12,13 +12,14 @@ export const getClients = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-export const checkClient = async (req: Request, res: Response): Promise<void> => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   const { provider, email, password, googleId } = req.body;
 
   try {
     if (provider === "local") {
+      // Проверка локального пользователя
       const result = await pool.query(
-        `SELECT * FROM clients WHERE client_email = $1 AND client_provider = 'local'`,
+        `SELECT * FROM clients WHERE client_email = $1`,
         [email]
       );
 
@@ -28,29 +29,57 @@ export const checkClient = async (req: Request, res: Response): Promise<void> =>
       }
 
       const client = result.rows[0];
-      const isMatch = await bcrypt.compare(password, client.client_pwd);
 
-      if (!isMatch) {
-        res.status(401).json({ message: "Невірний пароль" });
-        return;
+      // Если клиент найден с другим провайдером, но логиним через локальный вход
+      if (client.client_provider === 'google') {
+        // Важно: даже если провайдер google, продолжаем авторизацию как local
+        const isMatch = await bcrypt.compare(password, client.client_pwd);
+
+        if (!isMatch) {
+          res.status(401).json({ message: "Невірний пароль" });
+          return;
+        }
+
+        // Устанавливаем сессию, учитывая, что провайдер — google, но логин через локальную авторизацию
+        req.login(client, (err) => {
+          if (err) {
+            res.status(500).json({ error: "Помилка сесії" });
+          } else {
+            res.status(200).json({
+              authenticated: true,
+              client_id: client.client_id,
+              email: client.client_email,
+              name: client.client_p_i_b,
+              provider: client.client_provider,  // Несмотря на то, что в базе google, авторизация как local
+            });
+          }
+        });
+
+      } else {
+        const isMatch = await bcrypt.compare(password, client.client_pwd);
+
+        if (!isMatch) {
+          res.status(401).json({ message: "Невірний пароль" });
+          return;
+        }
+
+        req.login(client, (err) => {
+          if (err) {
+            res.status(500).json({ error: "Помилка сесії" });
+          } else {
+            res.status(200).json({
+              authenticated: true,
+              client_id: client.client_id,
+              email: client.client_email,
+              name: client.client_p_i_b,
+              provider: client.client_provider,
+            });
+          }
+        });
       }
 
-      // Устанавливаем сессию (автоматическая сериализация)
-      req.login(client, (err) => {
-        if (err) {
-          res.status(500).json({ error: "Помилка сесії" });
-        } else {
-          res.status(200).json({
-            authenticated: true,
-            client_id: client.client_id,
-            email: client.client_email,
-            name: client.client_p_i_b,
-            provider: client.client_provider,
-          });
-        }
-      });
-
     } else if (provider === "google") {
+      // Проверка через Google ID
       const result = await pool.query(
         `SELECT * FROM clients WHERE client_google_id = $1 AND client_provider = 'google'`,
         [googleId]
@@ -63,6 +92,26 @@ export const checkClient = async (req: Request, res: Response): Promise<void> =>
       }
     } else {
       res.status(400).json({ error: "Невідомий тип провайдера" });
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+export const getClientById = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM clients WHERE client_id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ message: 'Клієнта не знайдено' });
+    } else {
+      res.status(200).json(result.rows[0]);
     }
   } catch (err: any) {
     res.status(500).json({ error: err.message });
