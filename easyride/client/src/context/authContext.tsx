@@ -8,6 +8,7 @@ interface UserData {
   picture?: string;
   googleId?: string;
   password?: string;
+  role?: string;
 }
 
 // Интерфейс для пропсов компонента AuthProvider
@@ -40,7 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/user", {
+        const response = await fetch("http://localhost:5000/api/auth/user", {
           credentials: "include",
         });
         if (response.ok) {

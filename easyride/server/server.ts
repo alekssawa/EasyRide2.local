@@ -6,10 +6,10 @@ import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 
 
+import authRoutes from './routes/auth.routes.ts';
 import clientsRoutes from './routes/clients.routes.ts';
+import driversRoutes from './routes/drivers.routes.ts';
 import orderRoutes from './routes/order.routes.ts';
-
-
 
 import pool from "./lib/db.js"; // ← если ESM
 
@@ -31,10 +31,10 @@ app.use(express.json());
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-app.use('/api', clientsRoutes); 
+app.use('/api/auth', authRoutes);
+app.use('/api/client', clientsRoutes); 
+app.use('/api/driver', driversRoutes);
 app.use('/api/order', orderRoutes);
-
 
 passport.serializeUser(
   (user: Express.User, done: (err: any, id?: unknown) => void) => {
@@ -109,6 +109,7 @@ app.get(
       name: string;
       picture: string;
       needsRegistration: boolean;
+      role: string;
     };
 
     req.session.user = user;
@@ -125,73 +126,7 @@ app.get(
   }
 );
 
-// Выход из сессии
-app.post("/api/logout", (req: Request, res: Response) => {
-  req.logout((err) => {
-    if (err) {
-      return res.status(500).send("Ошибка выхода");
-    }
 
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).send("Ошибка уничтожения сессии");
-      }
-
-      res.clearCookie("connect.sid"); // или другой, если ты менял имя куки
-      res.sendStatus(200);
-    });
-  });
-});
-
-// Проверка авторизации
-
-app.get("/api/user", async (req: Request, res: Response) => {
-  try {
-    if (!req.session.user) {
-      console.warn("Пользователь не найден в сессии");
-      res.status(401).json({
-        authenticated: false,
-        message: "Пользователь не найден в сессии",
-      });
-      return;
-    }
-
-    const user = req.session.user;
-
-    // Ищем пользователя в базе данных по email
-    const result = await pool.query(
-      `SELECT client_id FROM clients WHERE client_email = $1`,
-      [user.email]
-    );
-
-    if (result.rowCount === 0) {
-      console.warn("Пользователь не найден в базе данных");
-      res.status(404).json({
-        authenticated: false,
-        message: "Пользователь не найден в базе данных",
-      });
-      return;
-    }
-
-    const clientId = result.rows[0].client_id;
-
-    // Отправляем успешный ответ с данными
-    res.json({
-      authenticated: true,
-      userId: clientId,
-      googleId: user.googleId,
-      email: user.email,
-      name: user.name,
-      picture: user.picture,
-    });
-  } catch (error) {
-    console.error("Ошибка при проверке авторизации:", error);
-    res.status(500).json({
-      authenticated: false,
-      message: "Ошибка сервера",
-    });
-  }
-});
 
 
 app.get("/api/db-users", async (req: Request, res: Response) => {

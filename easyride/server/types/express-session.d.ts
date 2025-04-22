@@ -8,6 +8,7 @@ declare module "express-session" {
       name: string;
       picture: string;
       needsRegistration: boolean;
+      role: string;
     };
   }
 }

@@ -39,7 +39,7 @@ const RegisterForm = ({ defaultValues, setAuthType }: RegisterFormProps) => {
     try {
       console.log("User post for front:", { googleId, email, name, password, provider});
       // Логика отправки данных на сервер для регистрации клиента
-      const response = await fetch('http://localhost:5000/api/clients', {
+      const response = await fetch('http://localhost:5000/api/client/getClients', {
         method: 'POST',
         body: JSON.stringify({
           name,

@@ -62,7 +62,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/logout", {
+      const response = await fetch("http://localhost:5000/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
@@ -97,7 +97,7 @@ const Header = () => {
                 content={
                   <>
                     <DropdownItem onClick={() => navigate("/profile")}>Профіль</DropdownItem>
-                    <DropdownItem onClick={() => navigate("/my-order")}>Мої замовлення</DropdownItem>
+                    <DropdownItem onClick={() => navigate("/my-order")}>Моє замовлення</DropdownItem>
                     <DropdownItem onClick={() => navigate("/my-order-history")}>Історія</DropdownItem>
                     <DropdownItem onClick={() => navigate("/settings")}>Налаштування</DropdownItem>
                     <DropdownItem onClick={handleLogout}>Вийти</DropdownItem>

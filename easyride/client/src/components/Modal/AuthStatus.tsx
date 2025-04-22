@@ -12,7 +12,7 @@ const AuthStatus = () => {
   const [user, setUser] = useState<UserData | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/user", {
+    fetch("http://localhost:5000/api/auth/user", {
       credentials: "include", // важно для передачи cookie
     })
       .then((res) => res.json())
@@ -21,7 +21,7 @@ const AuthStatus = () => {
   }, []);
 
   const handleLogout = () => {
-    fetch("http://localhost:5000/api/logout", {
+    fetch("http://localhost:5000/api/auth/logout", {
       method: "POST",
       credentials: "include",
     }).then(() => setUser({ authenticated: false }));

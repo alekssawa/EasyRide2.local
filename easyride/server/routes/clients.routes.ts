@@ -3,9 +3,8 @@ import {
   getClients,
   createClient,
   updateClient,
-  login,
   getClientById,
-} from '../controllers/clientController.ts'; // 👈 не забудь расширение .js при ESM
+} from '../controllers/client.controller.ts'; // 👈 не забудь расширение .js при ESM
 
 import { isAuthenticated } from '../middlewares/authMiddleware.ts';
 
@@ -13,11 +12,11 @@ import { isAuthenticated } from '../middlewares/authMiddleware.ts';
 
 const router = express.Router();
 
-router.get('/clients', isAuthenticated, getClients);
-router.get('/client/:id', isAuthenticated, getClientById);
+router.get('/getClients', isAuthenticated, getClients);
+router.get('/getClient/:id', isAuthenticated, getClientById);
 router.post('/clients', createClient);
-router.post('/login', login);
-router.put('/clients/:id', isAuthenticated, updateClient);
+
+router.put('/client/:id', isAuthenticated, updateClient);
 
 
 export default router;

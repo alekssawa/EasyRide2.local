@@ -23,4 +23,19 @@ body#profile {
     font-size: 14px;
     margin-top: auto;
   }
-  
+
+.profile {
+  background: white;
+  border-radius: 10px;
+  margin: 10px auto;
+  padding: 15px;
+  max-width: 450px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1); /* Мягкая тень с большим размытием */
+  overflow: hidden;
+  /*border: 1px solid #dcdcdc;*/
+}
+.profile:hover {
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}

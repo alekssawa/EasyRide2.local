@@ -20,7 +20,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/login",
+        "http://localhost:5000/api/auth/login",
         { provider: "local", email, password },
         { withCredentials: true }
       );
@@ -36,6 +36,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
           name: response.data.name,
           picture: response.data.picture,
           googleId: response.data.googleId,
+          role: response.data.role,
         });
 
         // Закрываем модалку после успешной авторизации
