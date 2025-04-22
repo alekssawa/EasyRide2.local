@@ -5,6 +5,7 @@ interface UserData {
   email?: string;
   name?: string;
   picture?: string;
+  password?: string;
 }
 
 const AuthStatus = () => {

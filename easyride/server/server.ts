@@ -145,7 +145,7 @@ app.post("/api/logout", (req: Request, res: Response) => {
 
 // Проверка авторизации
 
-app.get("/api/user", (req: Request, res: Response) => {
+app.get("/api/user", async (req: Request, res: Response) => {
   try {
     if (!req.session.user) {
       console.warn("Пользователь не найден в сессии");
@@ -153,25 +153,43 @@ app.get("/api/user", (req: Request, res: Response) => {
         authenticated: false,
         message: "Пользователь не найден в сессии",
       });
-      return; // Завершаем выполнение функции после отправки ответа
+      return;
     }
 
     const user = req.session.user;
 
-    // Отправка ответа, если пользователь найден
+    // Ищем пользователя в базе данных по email
+    const result = await pool.query(
+      `SELECT client_id FROM clients WHERE client_email = $1`,
+      [user.email]
+    );
+
+    if (result.rowCount === 0) {
+      console.warn("Пользователь не найден в базе данных");
+      res.status(404).json({
+        authenticated: false,
+        message: "Пользователь не найден в базе данных",
+      });
+      return;
+    }
+
+    const clientId = result.rows[0].client_id;
+
+    // Отправляем успешный ответ с данными
     res.json({
       authenticated: true,
+      userId: clientId,
       googleId: user.googleId,
       email: user.email,
       name: user.name,
       picture: user.picture,
     });
-    return; // Завершаем выполнение функции после отправки ответа
-
   } catch (error) {
     console.error("Ошибка при проверке авторизации:", error);
-    res.status(500).json({ authenticated: false, message: "Ошибка сервера" });
-    return; // Завершаем выполнение функции после отправки ответа
+    res.status(500).json({
+      authenticated: false,
+      message: "Ошибка сервера",
+    });
   }
 });
 

@@ -7,6 +7,7 @@ interface UserData {
   name?: string;
   picture?: string;
   googleId?: string;
+  password?: string;
 }
 
 // Интерфейс для пропсов компонента AuthProvider
@@ -18,6 +19,7 @@ interface AuthProviderProps {
 interface AuthContextType {
   user: UserData | null;
   setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined); // Тип контекста
@@ -32,6 +34,8 @@ export const useAuth = (): AuthContextType => {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -46,16 +50,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser({ authenticated: false });
         }
       } catch (error) {
-        setUser({ authenticated: false });
         console.error("Error fetching user data", error);
+        setUser({ authenticated: false });
+      } finally {
+        setLoading(false);
       }
     };
-
+  
     fetchUserData();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

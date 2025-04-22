@@ -6,7 +6,7 @@ import logo from "@/assets/img/logoWhite.png";
 import Modal from "../../components/Modal/Modal/Modal";
 import Dropdown from "../Dropdown/Dropdown";
 import DropdownItem from "../DropdownItem/DropdownItem";
-import { useAuth } from "../../context/authContext"; // Исправленный путь
+import { useAuth } from "../../context/authContext";
 
 const Header = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -18,74 +18,35 @@ const Header = () => {
     googleId?: string;
   }>({});
 
-  const { user, setUser } = useAuth(); // Используем useAuth для получения данных из контекста
+  const { user, setUser, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Функции для перехода на страницы
-  const goToHome = () => navigate("/");
-  const goToProfile = () => navigate("/profile");
-  const goToMyOrder = () => navigate("/my-order");
-  const goToMyOrderHistory = () => navigate("/my-order-history");
-  const goToSettings = () => navigate("/settings");
-
-  // Получаем query параметры и обрабатываем
+  // Обрабатываем query-параметры от Google OAuth
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const googleId = query.get("googleId");
     const email = query.get("email");
     const name = query.get("name");
-    const picture = query.get("picture");
     const needsReg = query.get("needsRegistration");
-
-    if (email || name) {
-      console.log("User from URL:", { googleId, email, name, picture });
-    }
 
     if (needsReg === "true") {
       setNeedsRegistration(true);
     }
 
     if (email || name) {
-      setRegisterData({
-        name: name || "",
-        email: email || "",
-        googleId: googleId || "",
-      });
+      setRegisterData({ name: name || "", email: email || "", googleId: googleId || "" });
     }
 
     if (needsReg || email) {
-      navigate("/", { replace: true });
+      navigate("/", { replace: true }); // Чистим URL
     }
   }, [location, navigate]);
 
-  // Загружаем данные пользователя с бэка
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/user", {
-          credentials: "include",
-        });
-        if (response.ok) {
-          const data = await response.json();
-          console.log(data);
-          setUser(data); // Обновляем данные пользователя в контексте
-        } else {
-          setUser({ authenticated: false });
-        }
-      } catch (error) {
-        setUser({ authenticated: false });
-        console.error("Error fetching user data", error);
-      }
-    };
-
-    fetchUserData();
-  }, [setUser]);
-
-  // ⛳ Открываем регистрацию, если нужно
+  // Открываем модалку регистрации при необходимости
   useEffect(() => {
     if (user?.authenticated && needsRegistration) {
-      openModal("register", registerData); // <-- Передаём данные
+      openModal("register", registerData);
       setNeedsRegistration(false);
     }
   }, [user, needsRegistration, registerData]);
@@ -94,12 +55,8 @@ const Header = () => {
     type: "login" | "register" | null,
     data?: { name?: string; email?: string }
   ) => {
-    if (type) {
-      setAuthType(type); // Убираем null для setAuthType
-    }
-    if (data) {
-      setRegisterData(data);
-    }
+    if (type) setAuthType(type);
+    if (data) setRegisterData(data);
     setModalOpen(true);
   };
 
@@ -110,8 +67,8 @@ const Header = () => {
         credentials: "include",
       });
       if (response.ok) {
-        setUser({ authenticated: false }); // Обновляем состояние в контексте при выходе
-        goToHome();
+        setUser({ authenticated: false });
+        navigate("/");
       } else {
         console.error("Failed to logout");
       }
@@ -120,16 +77,15 @@ const Header = () => {
     }
   };
 
-  if (user === null) return <p>Загрузка...</p>;
-
-  console.log(user);
-
+  if (loading || user === null){
+    return <p>Загрузка...</p>;
+  } 
   return (
     <>
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.logo}>
-            <a onClick={goToHome}>
+            <a onClick={() => navigate("/")}>
               <img src={logo} alt="Logo" width={150} height={50} />
             </a>
           </div>
@@ -140,10 +96,10 @@ const Header = () => {
                 buttonText={user.name}
                 content={
                   <>
-                    <DropdownItem onClick={goToProfile}>Profile</DropdownItem>
-                    <DropdownItem onClick={goToMyOrder}>My Order</DropdownItem>
-                    <DropdownItem onClick={goToMyOrderHistory}>My History</DropdownItem>
-                    <DropdownItem onClick={goToSettings}>Settings</DropdownItem>
+                    <DropdownItem onClick={() => navigate("/profile")}>Профіль</DropdownItem>
+                    <DropdownItem onClick={() => navigate("/my-order")}>Мої замовлення</DropdownItem>
+                    <DropdownItem onClick={() => navigate("/my-order-history")}>Історія</DropdownItem>
+                    <DropdownItem onClick={() => navigate("/settings")}>Налаштування</DropdownItem>
                     <DropdownItem onClick={handleLogout}>Вийти</DropdownItem>
                   </>
                 }
@@ -170,11 +126,11 @@ const Header = () => {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)} // Закрываем модалку при вызове onClose
+        onClose={() => setModalOpen(false)}
         authType={authType}
         setAuthType={setAuthType}
         registerData={registerData}
-        openModal={openModal} // передаем openModal в Modal
+        openModal={openModal}
       />
     </>
   );
