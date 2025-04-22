@@ -111,6 +111,7 @@ const Header = () => {
       });
       if (response.ok) {
         setUser({ authenticated: false }); // Обновляем состояние в контексте при выходе
+        goToHome();
       } else {
         console.error("Failed to logout");
       }
