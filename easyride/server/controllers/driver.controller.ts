@@ -21,11 +21,14 @@ export const getDriverById = async (req: Request, res: Response): Promise<void> 
          c.car_model, 
          c.car_registration_plate, 
          c.car_model_year, 
-         t.tariff_name
+         t.tariff_name,
+         COALESCE(ROUND(AVG(r.review_rating)::numeric, 1), 0) AS average_rating
        FROM drivers d
        LEFT JOIN cars c ON c.car_id = d.driver_car_id
        LEFT JOIN tariffs t ON c.car_tariff_id = t.tariff_id
-       WHERE d.driver_id = $1`,
+       LEFT JOIN reviews_drivers r ON r.review_driver_id = d.driver_id
+       WHERE d.driver_id = $1
+       GROUP BY d.driver_id, c.car_model, c.car_registration_plate, c.car_model_year, t.tariff_name`,
       [id]
     );
 

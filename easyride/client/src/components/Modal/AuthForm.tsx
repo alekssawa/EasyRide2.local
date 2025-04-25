@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./Form.module.css";
 import AuthSignIn from "./AuthSignIn";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "../../context/authContext"; // Импортируем useAuth
+
 
 interface AuthFormProps {
   openModal: (type: "login" | "register" | null, data?: { name?: string; email?: string }) => void;
@@ -10,10 +11,12 @@ interface AuthFormProps {
 }
 
 const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
-  const { setUser } = useAuth(); // Используем setUser из контекста
+  const { user, setUser } = useAuth();
+  const { refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState(false); // индикатор успешного логина
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,9 +29,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
       );
 
       if (response.status === 200) {
-        console.log("Авторизация успешна", response.data);
-
-        // Добавляем данные пользователя в контекст
         setUser({
           authenticated: true,
           userId: response.data.client_id,
@@ -37,10 +37,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
           picture: response.data.picture,
           googleId: response.data.googleId,
           role: response.data.role,
+          password: null, // или undefined, если так в типе
         });
-
-        // Закрываем модалку после успешной авторизации
-        onClose();  // Закрываем модалку через onClose
+        await refreshUser(); 
+        setLoginSuccess(true); // триггерим useEffect
       }
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response) {
@@ -50,6 +50,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
       }
     }
   };
+
+  useEffect(() => {
+    if (loginSuccess && user.authenticated) {
+      console.log("Пользователь обновлён в контексте:", user);
+      onClose(); // Закрываем модалку только после установки пользователя
+    }
+  }, [loginSuccess, user, onClose]);
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>

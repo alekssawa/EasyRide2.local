@@ -67,7 +67,16 @@ const Header = () => {
         credentials: "include",
       });
       if (response.ok) {
-        setUser({ authenticated: false });
+        setUser({
+          authenticated: false,
+          userId: null,
+          email: null,
+          name: null,
+          picture: null,
+          googleId: null,
+          password: null,
+          role: null,
+        });
         navigate("/");
       } else {
         console.error("Failed to logout");
@@ -78,7 +87,7 @@ const Header = () => {
   };
 
   if (loading || user === null){
-    return <p>Загрузка...</p>;
+    return;
   } 
   return (
     <>

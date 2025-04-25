@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/authContext";
 import "../styles/Profile.css";
+import { useNavigate } from "react-router-dom";
 
 import avatarDriver from "../assets/img/avatar_driver.jpg";
 
@@ -20,105 +21,173 @@ interface Driver {
   car_model_year: string;
   car_registration_plate: string;
   tariff_name: string;
+  average_rating: string;
 }
 
+const ProfileSkeleton = () => {
+  return (
+    <div className="w-[700px] h-[293.6px] mx-auto p-6 bg-white rounded-xl shadow-md">
+      <h2 className="w-[651.9px] h-[31.9px] text-2xl font-semibold mb-6">Детали профиля</h2>
+      <div className="w-[651.9px] h-[189.6px] flex justify-center items-center gap-6 border rounded-lg p-6">
+        <div className="w-32 h-32 bg-gray-200 rounded-full animate-pulse"></div>
+        <div className="h-[140px] flex-1 space-y-4">
+          <h3 className="text-xl font-bold bg-gray-200 h-6 rounded w-80 animate-pulse mx-auto text-center"></h3>
+          <div className="grid grid-cols-3 gap-4 text-sm text-gray-700">
+            <div>
+              <p className="font-medium text-gray-500">Роль</p>
+              <div className="flex justify-center">
+                <div className="flex items-center gap-1 text-sm">
+                  <span className="bg-gray-200 h-5 rounded w-20 animate-pulse"></span>
+                  <span className="bg-gray-200 h-5 rounded w-8 animate-pulse"></span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className="font-medium text-gray-500">Номер телефона</p>
+              <p className="bg-gray-200 h-5 rounded w-28 animate-pulse mx-auto text-center"></p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-500">Электронная почта</p>
+              <p className="bg-gray-200 h-5 rounded w-36 animate-pulse mx-auto text-center"></p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-500">Модель автомобиля</p>
+              <p className="bg-gray-200 h-5 rounded w-32 animate-pulse mx-auto text-center"></p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-500">Номерной знак</p>
+              <p className="bg-gray-200 h-5 rounded w-32 animate-pulse mx-auto text-center"></p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-500">Тариф</p>
+              <p className="bg-gray-200 h-5 rounded w-20 animate-pulse mx-auto text-center"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Profile = () => {
-  const { user, loading: authLoading } = useAuth();
   const [userInfo, setUserInfo] = useState<Client | Driver | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSkeleton, setShowSkeleton] = useState(true); // Состояние для контроля показа скелетона
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (user && user.userId) {
-        try {
-          let response;
-          if (user.role === "client") {
-            response = await fetch(`http://localhost:5000/api/client/getClient/${user.userId}`, {
-              credentials: "include",
-            });
-          } else if (user.role === "driver") {
-            response = await fetch(`http://localhost:5000/api/driver/getDriver/${user.userId}`, {
-              credentials: "include",
-            });
-          }
+      if (!user.authenticated || !user.userId || !user.role) {
+        setIsLoading(false);
+        return;
+      }
 
-          if (response && response.ok) {
-            const data = await response.json();
-            setUserInfo(data);
-            // console.log(data);
-          } else {
-            console.error("User not found");
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        } finally {
-          setIsLoading(false);
+      setIsLoading(true);
+
+      try {
+        let response;
+        if (user.role === "client") {
+          response = await fetch(`http://localhost:5000/api/client/getClient/${user.userId}`, {
+            credentials: "include",
+          });
+        } else if (user.role === "driver") {
+          response = await fetch(`http://localhost:5000/api/driver/getDriver/${user.userId}`, {
+            credentials: "include",
+          });
         }
-      } else {
+
+        if (response && response.ok) {
+          const data = await response.json();
+          setUserInfo(data);
+        } else {
+          console.error("Пользователь не найден");
+          setUserInfo(null);
+        }
+      } catch (error) {
+        console.error("Ошибка при получении данных пользователя:", error);
+        setUserInfo(null);
+      } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUserData();
-  }, [user]);
+    if (!authLoading) {
+      fetchUserData();
+    }
+  }, [user, authLoading]);
 
-  if (authLoading || isLoading || user === null) {
-    return <p>Завантаження...</p>;
+  useEffect(() => {
+    // Добавим задержку для отображения скелетона
+    setTimeout(() => {
+      setShowSkeleton(false); // После 1 секунды скрываем скелетон
+    }, 100000); // Задержка на 1 секунду
+  }, []);
+
+  if (isLoading || authLoading || showSkeleton) {
+    return <ProfileSkeleton />;
   }
 
-  if (!userInfo) {
-    return <p>Інформація про клієнта або водія не знайдена</p>;
+  if (!user.authenticated) {
+    navigate("/");
+  }
+
+  if (!isLoading && !userInfo) {
+    return <p>Информация о клиенте или водителе не найдена</p>;
   }
 
   const isClient = user.role === "client";
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-semibold mb-6">Details Profile</h2>
+      <h2 className="text-2xl font-semibold mb-6">Детали профиля</h2>
       <div className="flex items-start gap-6 border rounded-lg p-6">
         <img
-          src={avatarDriver} // Замени на реальный путь к фото
+          src={avatarDriver}
           alt="Profile"
           className="w-32 h-32 object-cover rounded-full"
         />
-
         <div className="flex-1 space-y-4">
           <h3 className="text-xl font-bold">
-            {isClient ? (userInfo as Client).client_p_i_b : (userInfo as Driver).driver_p_i_b}
+            {isClient ? (userInfo as Client)?.client_p_i_b : (userInfo as Driver)?.driver_p_i_b}
           </h3>
 
-          <div className="grid grid-cols-3 gap-4 text-sm text-gray-700">
+          <div className={isClient ? "grid grid-cols-2 gap-4 text-sm text-gray-700" : "grid grid-cols-3 gap-4 text-sm text-gray-700"}>
+            {user.role === "driver" && userInfo && (
+              <div>
+                <p className="font-medium text-gray-500">Роль</p>
+                <div className="flex justify-center">
+                  <div className="flex items-center gap-1 text-sm">
+                    <span>{isClient ? "Клиент" : "Водитель"}</span>
+                    <span className="text-base leading-none">⭐ {(userInfo as Driver)?.average_rating}</span>
+                  </div>
+                </div>
+              </div>
+            )}
             <div>
-              <p className="font-medium text-gray-500">Role</p>
-              <p className="flex items-center gap-1">
-                {user.role} <span>⭐ 4</span>
-              </p>
+              <p className="font-medium text-gray-500">Номер телефона</p>
+              <p>{isClient ? (userInfo as Client)?.client_phone_number : (userInfo as Driver)?.driver_phone_number}</p>
             </div>
 
             <div>
-              <p className="font-medium text-gray-500">Phone Number</p>
-              <p>{isClient ? (userInfo as Client).client_phone_number : (userInfo as Driver).driver_phone_number}</p>
+              <p className="font-medium text-gray-500">Электронная почта</p>
+              <p>{isClient ? (userInfo as Client)?.client_email : (userInfo as Driver)?.driver_email}</p>
             </div>
 
-            <div>
-              <p className="font-medium text-gray-500">Email Address</p>
-              <p>{isClient ? (userInfo as Client).client_email : (userInfo as Driver).driver_email}</p>
-            </div>
-
-            {user.role === "driver" && (
+            {user.role === "driver" && userInfo && (
               <>
                 <div>
-                  <p className="font-medium text-gray-500">Model</p>
+                  <p className="font-medium text-gray-500">Модель автомобиля</p>
                   <p>{(userInfo as Driver).car_model}</p>
                 </div>
 
                 <div>
-                  <p className="font-medium text-gray-500">Registration Plate</p>
+                  <p className="font-medium text-gray-500">Номерной знак</p>
                   <p>{(userInfo as Driver).car_registration_plate}</p>
                 </div>
 
                 <div>
-                  <p className="font-medium text-gray-500">Tariff</p>
+                  <p className="font-medium text-gray-500">Тариф</p>
                   <p>{(userInfo as Driver).tariff_name}</p>
                 </div>
               </>

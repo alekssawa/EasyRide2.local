@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/authContext";
+import { useNavigate } from "react-router-dom";
 // import "../styles/MyOrder.css";
 
 import tripIcon from "../assets/img/IconTripHistoryDarker.png";
@@ -31,6 +32,10 @@ const MyOrder: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
+  
+  if(!user.authenticated) navigate("/");
+  
   const handleCancel = async (orderId: string) => {
     try {
       const response = await fetch(`/api/order/${orderId}/cancel`, {
@@ -94,6 +99,8 @@ const MyOrder: React.FC = () => {
 
     fetchOrders();
   }, [user]);
+
+
 
   if (loading) return <p>Loading...</p>;
   if (orders.length === 0) return <p>У вас немає подорожі</p>;

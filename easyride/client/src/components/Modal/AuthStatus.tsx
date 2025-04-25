@@ -27,7 +27,7 @@ const AuthStatus = () => {
     }).then(() => setUser({ authenticated: false }));
   };
 
-  if (user === null) return <p>Загрузка...</p>;
+  if (user === null) return <p>Загрузкsadasdasdasdasdasdasа...</p>;
 
   return user.authenticated ? (
     <div>
