@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
 
+
+
 import tripIcon from "../assets/img/IconTripHistoryDarker.png";
-import starIcon from "../assets/img/Star_rating.png";
+import starIcon from "../assets/img/Star_rating.png"; // Заполненная звезда
+import EmptyStarIcon from "../assets/img/Star_Empty_rating.png"; // Пустая звезда
 
 interface Order {
   id: string;
@@ -74,16 +77,6 @@ const MyOrderHistory = () => {
     fetchOrders();
   }, [user]);
 
-  const handleCancel = (orderId: string) => {
-    console.log("Отменить поездку:", orderId);
-    // Здесь можно добавить API-запрос для отмены поездки
-  };
-
-  const handleComplete = (orderId: string) => {
-    console.log("Завершить поездку:", orderId);
-    // Здесь можно добавить API-запрос для завершения поездки
-  };
-
   if (!user.authenticated) {
     navigate("/");
     return null;
@@ -92,41 +85,44 @@ const MyOrderHistory = () => {
   if (loading) return <p>Loading...</p>;
   if (orders.length === 0) return <p>У вас немає подорожі</p>;
 
-  return (
-    <OrdersList
-      orders={orders}
-      user={user}
-      handleCancel={handleCancel}
-      handleComplete={handleComplete}
-    />
-  );
+  return <OrdersList orders={orders} user={user} />;
 };
 
-const OrdersList = ({
-  orders,
-  user,
-  handleCancel,
-  handleComplete,
-}: {
-  orders: Order[];
-  user: User;
-  handleCancel: (orderId: string) => void;
-  handleComplete: (orderId: string) => void;
-}) => {
+const OrdersList = ({ orders, user }: { orders: Order[]; user: User }) => {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [reviews, setReviews] = useState<Record<string, string>>({});
 
   const toggleExpand = (id: string) => {
     setExpandedOrderId((prev) => (prev === id ? null : id));
   };
 
+  const handleStarClick = (orderId: string, star: number) => {
+    setRatings((prev) => ({ ...prev, [orderId]: star }));
+  };
+
+  const handleReviewChange = (orderId: string, text: string) => {
+    setReviews((prev) => ({ ...prev, [orderId]: text }));
+  };
+
+  const handleSubmitReview = (orderId: string) => {
+    // Here you would typically send the review and rating to your backend
+    console.log(`Submitting review for order ${orderId}:`, {
+      rating: ratings[orderId],
+      review: reviews[orderId],
+    });
+    // You can add your API call here
+  };
+
   return (
-    <div className="orders-list mt-24">
+    <div className="orders-list mt-[120px]">
       {orders.map((order) => {
         const isExpanded = expandedOrderId === order.id;
         const formattedDistance =
           typeof order.distance === "number"
             ? order.distance.toFixed(2).replace(".", ",")
             : "0,00";
+        const currentRating = ratings[order.id] || 0;
 
         return (
           <div
@@ -140,17 +136,24 @@ const OrdersList = ({
                   src={tripIcon}
                   alt="Маршрут"
                   className="mr-2"
-                  style={{ width: "calc(305px / 10)", height: "calc(881px / 10)" }}
+                  style={{
+                    width: "calc(305px / 10)",
+                    height: "calc(881px / 10)",
+                  }}
                 />
                 <div className="flex flex-col items-start text-base">
                   <div className="font-semibold">
                     <span>{formatLocation(order.start_location)}</span>
                   </div>
-                  <span className="text-gray-500 text-xs">Початок маршруту</span>
+                  <span className="text-gray-500 text-xs">
+                    Початок маршруту
+                  </span>
                   <div className="font-semibold pt-2">
                     <span>{formatLocation(order.destination)}</span>
                   </div>
-                  <span className="text-gray-500 text-xs">Пункт призначення</span>
+                  <span className="text-gray-500 text-xs">
+                    Пункт призначення
+                  </span>
                 </div>
               </div>
             </div>
@@ -175,7 +178,11 @@ const OrdersList = ({
                             alt="rating"
                             className="w-2 h-auto ml-1"
                           />
-                          {order.average_rating.toFixed(1)}
+                          {/* FIXME: Изменить на рейтинг */}
+                          {typeof order.amount === "number"
+                            ? order.amount.toFixed(2).replace(".", ",")
+                            : "0,00"}{" "}
+                          ₴
                         </span>
                       </>
                     ) : (
@@ -186,7 +193,9 @@ const OrdersList = ({
                   {user?.role === "client" && (
                     <div className="flex flex-col items-end">
                       <span className="font-semibold">{order.car_model}</span>
-                      <span className="text-gray-500 text-sm">{order.car_registration_plate}</span>
+                      <span className="text-gray-500 text-sm">
+                        {order.car_registration_plate}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -194,7 +203,9 @@ const OrdersList = ({
                 <div className="grid grid-cols-3 gap-5 justify-items-center">
                   <div className="flex flex-col">
                     <span className="font-semibold">Тариф:</span>
-                    <span className="text-gray-500 text-sm">{order.tariff}</span>
+                    <span className="text-gray-500 text-sm">
+                      {order.tariff}
+                    </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="font-semibold">Дата:</span>
@@ -210,14 +221,18 @@ const OrdersList = ({
                   </div>
                   <div className="flex flex-col">
                     <span className="font-semibold">Відстань:</span>
-                    <span className="text-gray-500 text-sm">{formattedDistance} км</span>
+                    <span className="text-gray-500 text-sm">
+                      {formattedDistance} км
+                    </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-5 justify-items-center mt-3">
                   <div className="flex flex-col">
                     <span className="font-semibold">Тип оплати:</span>
-                    <span className="text-gray-500 text-sm">{order.payment_type}</span>
+                    <span className="text-gray-500 text-sm">
+                      {order.payment_type}
+                    </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="font-semibold">Вартість:</span>
@@ -227,47 +242,52 @@ const OrdersList = ({
                   </div>
                 </div>
 
-                <div className="flex justify-center items-center py-4 text-gray-600 text-sm font-medium w-full relative mt-4">
+                <div className="flex justify-center items-center py-4 text-gray-600 text-sm font-medium w-full relative">
                   <div className="flex-grow border-b border-gray-300 mr-2"></div>
-                  <span className="px-2 bg-white">CONTROL</span>
+                  <span className="px-2 bg-white">REVIEW</span>
                   <div className="flex-grow border-b border-gray-300 ml-2"></div>
                 </div>
+                <textarea
+                  className="w-full border border-gray-300 rounded-lg p-2 mb-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm font-roboto"
+                  placeholder="Напишіть свій відгук тут..."
+                  rows={5}
+                  maxLength={300}
+                  value={reviews[order.id] || ""}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    const ta = e.target as HTMLTextAreaElement;
+                    ta.style.height = "auto";
+                    ta.style.height = ta.scrollHeight + "px";
+                    handleReviewChange(order.id, ta.value);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ overflow: "hidden" }}
+                />
 
-                {user?.role === "client" ? (
-                  <button
-                    className="w-full h-[40px] bg-gray-700 text-white py-3 rounded-lg text-[8px] hover:bg-gray-600 transition-all"
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCancel(order.id);
-                    }}
-                  >
-                    Скасувати поїздку
-                  </button>
-                ) : (
-                  <div className="flex justify-between">
-                    <button
-                      className="w-full h-[40px] bg-gray-700 text-white py-3 rounded-lg text-[8px] hover:bg-gray-600 transition-all mr-2"
-                      type="button"
+                {/* Рейтинг звезд */}
+                <div className="flex justify-center items-center my-4">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <img
+                      key={star}
+                      src={star <= currentRating ? starIcon : EmptyStarIcon}
+                      alt={`star-${star}`}
+                      className="w-10 h-10 mx-1 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCancel(order.id);
+                        handleStarClick(order.id, star);
                       }}
-                    >
-                      Скасувати поїздку
-                    </button>
-                    <button
-                      className="w-full h-[24px] bg-gray-700 text-white text-[8px] !important rounded-md hover:bg-gray-600 transition-all p-0"
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleComplete(order.id);
-                      }}
-                    >
-                      Завершити поїздку
-                    </button>
-                  </div>
-                )}
+                    />
+                  ))}
+                </div>
+                <button
+                  className="w-full bg-gray-700 text-white py-2 rounded-lg hover:bg-gray-800 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSubmitReview(order.id);
+                  }}
+                >
+                  Надіслати
+                </button>
               </div>
             )}
           </div>

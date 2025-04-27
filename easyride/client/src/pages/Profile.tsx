@@ -26,11 +26,12 @@ interface Driver {
 
 const ProfileSkeleton = () => {
   return (
-    <div className="w-[700px] h-[293.6px] mx-auto p-6 bg-white rounded-xl shadow-md">
-      <h2 className="w-[651.9px] h-[31.9px] text-2xl font-semibold mb-6">Детали профиля</h2>
+    <div className="w-[700px] h-[293.6px] mx-auto mt-[120px] p-6 bg-white rounded-xl shadow-md ">
+      <h2 className="w-[651.9px] h-[31.9px] text-2xl font-semibold mb-6">
+        Детали профиля
+      </h2>
       <div className="w-[651.9px] h-[189.6px] flex justify-center items-center gap-6 border rounded-lg p-6">
-      <div className="w-32 h-32 bg-gray-200 rounded-full animate-pulse">
-      </div>
+        <div className="w-32 h-32 bg-gray-200 rounded-full animate-pulse"></div>
         <div className="h-[140px] flex-1 space-y-4">
           <h3 className="text-xl font-bold bg-gray-200 h-6 rounded w-80 animate-pulse mx-auto text-center"></h3>
           <div className="grid grid-cols-3 gap-4 text-sm text-gray-700">
@@ -89,13 +90,19 @@ const Profile = () => {
       try {
         let response;
         if (user.role === "client") {
-          response = await fetch(`http://localhost:5000/api/client/getClient/${user.userId}`, {
-            credentials: "include",
-          });
+          response = await fetch(
+            `http://localhost:5000/api/client/getClient/${user.userId}`,
+            {
+              credentials: "include",
+            }
+          );
         } else if (user.role === "driver") {
-          response = await fetch(`http://localhost:5000/api/driver/getDriver/${user.userId}`, {
-            credentials: "include",
-          });
+          response = await fetch(
+            `http://localhost:5000/api/driver/getDriver/${user.userId}`,
+            {
+              credentials: "include",
+            }
+          );
         }
 
         if (response && response.ok) {
@@ -140,39 +147,57 @@ const Profile = () => {
   const isClient = user.role === "client";
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md">
+    <div className="max-w-4xl mx-auto mt-[120px] p-6 bg-white rounded-xl shadow-md">
       <h2 className="text-2xl font-semibold mb-6">Детали профиля</h2>
-      <div className="flex items-start gap-6 border rounded-lg p-6">
-      <img
-  src={avatarDriver}
-  alt="Profile"
-  className="w-32 h-32 object-cover rounded-full m-0 p-0"
-/>
-        <div className="flex-1 space-y-4">
+      <div className=" max-w-full flex items-start gap-6 border rounded-lg p-6">
+        <img
+          src={avatarDriver}
+          alt="Profile"
+          className="w-32 h-32 object-cover rounded-full m-0 p-0"
+        />
+        <div className="flex-1 space-y-4 max-w-full">
           <h3 className="text-xl font-bold">
-            {isClient ? (userInfo as Client)?.client_p_i_b : (userInfo as Driver)?.driver_p_i_b}
+            {isClient
+              ? (userInfo as Client)?.client_p_i_b
+              : (userInfo as Driver)?.driver_p_i_b}
           </h3>
 
-          <div className={isClient ? "grid grid-cols-2 gap-4 text-sm text-gray-700" : "grid grid-cols-3 gap-4 text-sm text-gray-700"}>
+          <div
+            className={
+              isClient
+                ? "inline-grid grid-cols-2 gap-4 text-sm text-gray-700 justify-items-start"
+                : "grid grid-cols-3 gap-4 text-sm text-gray-700"
+            }
+          >
             {user.role === "driver" && userInfo && (
               <div>
                 <p className="font-medium text-gray-500">Роль</p>
                 <div className="flex justify-center">
                   <div className="flex items-center gap-1 text-sm">
                     <span>{isClient ? "Клиент" : "Водитель"}</span>
-                    <span className="text-base leading-none">⭐ {(userInfo as Driver)?.average_rating}</span>
+                    <span className="text-base leading-none">
+                      ⭐ {(userInfo as Driver)?.average_rating}
+                    </span>
                   </div>
                 </div>
               </div>
             )}
             <div>
               <p className="font-medium text-gray-500">Номер телефона</p>
-              <p>{isClient ? (userInfo as Client)?.client_phone_number : (userInfo as Driver)?.driver_phone_number}</p>
+              <p>
+                {isClient
+                  ? (userInfo as Client)?.client_phone_number
+                  : (userInfo as Driver)?.driver_phone_number}
+              </p>
             </div>
 
             <div>
               <p className="font-medium text-gray-500">Электронная почта</p>
-              <p>{isClient ? (userInfo as Client)?.client_email : (userInfo as Driver)?.driver_email}</p>
+              <p>
+                {isClient
+                  ? (userInfo as Client)?.client_email
+                  : (userInfo as Driver)?.driver_email}
+              </p>
             </div>
 
             {user.role === "driver" && userInfo && (

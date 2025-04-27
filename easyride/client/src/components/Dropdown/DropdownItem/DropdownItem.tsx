@@ -23,7 +23,7 @@ const DropdownItem = ({ children, onClick }: DropdownItemProps) => {
 
   return (
     <div
-      className="dropdown-item"
+      className="dropdown-item flex justify-center"
       onClick={onClick}
       role="button"
       tabIndex={0}
