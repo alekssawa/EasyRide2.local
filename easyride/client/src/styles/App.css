@@ -1,7 +1,7 @@
 #root {
   /* max-width: 1280px; */
   margin: 0 auto; /* Эта строка выравнивает контейнер по центру */
-  padding: 2rem;
+  /* padding: 2rem; */
   text-align: left; /* Добавьте это, чтобы текст выравнивался слева */
 }
 

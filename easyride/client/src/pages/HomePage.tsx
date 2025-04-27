@@ -1,19 +1,20 @@
 // pages/HomePage.tsx
-
-// import React, { useState } from "react"; // Импортируем useState
 import TaxiOrder from "../components/OrderMenu/OrderMenu";
-import MapView from '../components/MapView';
-// import "../styles/index.css"; // или App.css, где лежит .left-align-override
+import MapView from "../components/Map/MapView";
 
-const HomePage = () => {
-
-  return (
-    <div className="flex justify-start items-center min-h-screen">
-      <div className="ml-8">
+const HomePage = () => (
+  <div className="relative w-full h-screen">
+    {/* Фон-карта */}
+    <div className="absolute inset-0 z-0 h-full w-full">
+      <MapView address="Одеса, Україна" zoom={12} />
+    </div>
+    {/* Ваше меню поверх карты */}
+    <div className="absolute inset-0 z-10 flex justify-start items-center p-8 pointer-events-none">
+      <div className="pointer-events-auto">
         <TaxiOrder />
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 export default HomePage;
