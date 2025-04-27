@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, ReactNode } from "react";
-import DropdownButton from "../DropdownButton/DropdownButton";
-import DropdownContent from "../DropdownContent/DropdownContent";
+import DropdownButton from "./DropdownButton/DropdownButton";
+import DropdownContent from "./DropdownContent/DropdownContent";
 import "./Dropdown.css";
 
 interface DropdownProps {

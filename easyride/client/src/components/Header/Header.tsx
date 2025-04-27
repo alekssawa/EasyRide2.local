@@ -5,7 +5,7 @@ import logo from "@/assets/img/logoWhite.png";
 
 import Modal from "../../components/Modal/Modal/Modal";
 import Dropdown from "../Dropdown/Dropdown";
-import DropdownItem from "../DropdownItem/DropdownItem";
+import DropdownItem from "../Dropdown/DropdownItem/DropdownItem";
 import { useAuth } from "../../context/authContext";
 
 const Header = () => {

@@ -29,7 +29,8 @@ const ProfileSkeleton = () => {
     <div className="w-[700px] h-[293.6px] mx-auto p-6 bg-white rounded-xl shadow-md">
       <h2 className="w-[651.9px] h-[31.9px] text-2xl font-semibold mb-6">Детали профиля</h2>
       <div className="w-[651.9px] h-[189.6px] flex justify-center items-center gap-6 border rounded-lg p-6">
-        <div className="w-32 h-32 bg-gray-200 rounded-full animate-pulse"></div>
+      <div className="w-32 h-32 bg-gray-200 rounded-full animate-pulse">
+      </div>
         <div className="h-[140px] flex-1 space-y-4">
           <h3 className="text-xl font-bold bg-gray-200 h-6 rounded w-80 animate-pulse mx-auto text-center"></h3>
           <div className="grid grid-cols-3 gap-4 text-sm text-gray-700">
@@ -121,7 +122,7 @@ const Profile = () => {
     // Добавим задержку для отображения скелетона
     setTimeout(() => {
       setShowSkeleton(false); // После 1 секунды скрываем скелетон
-    }, 100000); // Задержка на 1 секунду
+    }, 500); // Задержка на 1 секунду
   }, []);
 
   if (isLoading || authLoading || showSkeleton) {
@@ -142,11 +143,11 @@ const Profile = () => {
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md">
       <h2 className="text-2xl font-semibold mb-6">Детали профиля</h2>
       <div className="flex items-start gap-6 border rounded-lg p-6">
-        <img
-          src={avatarDriver}
-          alt="Profile"
-          className="w-32 h-32 object-cover rounded-full"
-        />
+      <img
+  src={avatarDriver}
+  alt="Profile"
+  className="w-32 h-32 object-cover rounded-full m-0 p-0"
+/>
         <div className="flex-1 space-y-4">
           <h3 className="text-xl font-bold">
             {isClient ? (userInfo as Client)?.client_p_i_b : (userInfo as Driver)?.driver_p_i_b}

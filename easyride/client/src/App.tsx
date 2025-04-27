@@ -19,7 +19,7 @@ function App() {
     <>
       <AuthProvider>
         <Header />
-        <main>
+        <main className="">
           {/* Маршруты для страниц */}
           <Routes>
             {/* Главная страница */}

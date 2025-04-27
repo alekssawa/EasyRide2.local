@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes.ts';
 import clientsRoutes from './routes/clients.routes.ts';
 import driversRoutes from './routes/drivers.routes.ts';
 import orderRoutes from './routes/order.routes.ts';
+import historyOrderRoutes from './routes/historyOrder.routes.ts';
 
 import pool from "./lib/db.js"; // ← если ESM
 
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/client', clientsRoutes); 
 app.use('/api/driver', driversRoutes);
 app.use('/api/order', orderRoutes);
+app.use('/api/history', historyOrderRoutes);
 
 passport.serializeUser(
   (user: Express.User, done: (err: any, id?: unknown) => void) => {

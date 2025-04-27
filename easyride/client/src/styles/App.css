@@ -1,8 +1,8 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
+  /* max-width: 1280px; */
+  margin: 0 auto; /* Эта строка выравнивает контейнер по центру */
   padding: 2rem;
-  text-align: center;
+  text-align: left; /* Добавьте это, чтобы текст выравнивался слева */
 }
 
 .logo {

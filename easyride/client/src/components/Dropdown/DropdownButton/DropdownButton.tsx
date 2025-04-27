@@ -1,7 +1,7 @@
 import { forwardRef, ReactNode, MouseEventHandler } from "react";
 
 import "./DropdownButton.css";
-import styles from "../Header/Header.module.css";
+import styles from "../../Header/Header.module.css";
 
 interface DropdownButtonProps {
   children: ReactNode;
@@ -11,7 +11,7 @@ interface DropdownButtonProps {
 
 // ref будет ссылкой на div
 const DropdownButton = forwardRef<HTMLDivElement, DropdownButtonProps>(
-  ({ children, toggle, open }, ref) => {
+  ({ children, toggle }, ref) => {
     return (
       <div
         onClick={toggle}
