@@ -112,6 +112,7 @@ const OrdersList = ({ orders, user }: { orders: Order[]; user: User }) => {
     // You can add your API call here
   };
 
+
   return (
     <div className="orders-list mt-[120px]">
       {orders.map((order) => {
@@ -121,7 +122,6 @@ const OrdersList = ({ orders, user }: { orders: Order[]; user: User }) => {
             ? order.distance.toFixed(1).replace(".", ",")
             : "0,0";
         const currentRating = ratings[order.id] || 0;
-
         return (
           <div
             key={order.id}
@@ -154,7 +154,7 @@ const OrdersList = ({ orders, user }: { orders: Order[]; user: User }) => {
                   </span>
                 </div>
               </div>
-
+              
               <div className="flex flex-col items-center space-y-0">
                 <div className="flex flex-col justify-center items-center text-sm font-semibold text-gray-700 mt-1 mb-0">
                   <span className="text-gray-500 text-xs">Відстань</span>
@@ -167,7 +167,6 @@ const OrdersList = ({ orders, user }: { orders: Order[]; user: User }) => {
                     <span>{order.amount.toFixed(0).replace(".", ",")}₴</span>
                   </div>
                 </div>
-                
               </div>
             </div>
 
@@ -199,7 +198,7 @@ const OrdersList = ({ orders, user }: { orders: Order[]; user: User }) => {
                     )}
                   </div>
 
-                  {user?.role === "client" && (
+                  {user.role === "client" && (
                     <div className="flex flex-col items-end">
                       <span className="font-semibold">{order.car_model}</span>
                       <span className="text-gray-500 text-sm">
@@ -229,24 +228,9 @@ const OrdersList = ({ orders, user }: { orders: Order[]; user: User }) => {
                     </span>
                   </div>
                   <div className="flex flex-col justify-start">
-                    <span className="font-semibold">Відстань:</span>
-                    <span className="text-gray-500 text-sm">
-                      {formattedDistance} км
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-5 justify-items-center mt-3">
-                  <div className="flex flex-col justify-start">
                     <span className="font-semibold">Тип оплати:</span>
                     <span className="text-gray-500 text-sm">
                       {order.payment_type}
-                    </span>
-                  </div>
-                  <div className="flex flex-col justify-start">
-                    <span className="font-semibold">Вартість:</span>
-                    <span className="text-gray-500 text-sm">
-                      {order.amount.toFixed(2).replace(".", ",")} ₴
                     </span>
                   </div>
                 </div>

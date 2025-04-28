@@ -110,6 +110,7 @@ const MyOrder: React.FC = () => {
               ? order.distance.toFixed(2).replace(".", ",")
               : "0,00";
 
+
           return (
             <div
               key={order.id}
