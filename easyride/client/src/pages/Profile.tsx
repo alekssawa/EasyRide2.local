@@ -25,50 +25,84 @@ interface Driver {
 }
 
 const ProfileSkeleton = () => {
+  const { user } = useAuth();
+  console.log(user.role);
   return (
-    <div className="w-[700px] h-[293.6px] mx-auto mt-[120px] p-6 bg-white rounded-xl shadow-md ">
-      <h2 className="w-[651.9px] h-[31.9px] text-2xl font-semibold mb-6">
-        Детали профиля
-      </h2>
-      <div className="w-[651.9px] h-[189.6px] flex justify-center items-center gap-6 border rounded-lg p-6">
+    <div
+      className={
+        user.role === "client"
+          ? "w-full max-w-[550px] h-[281.59px] mx-auto mt-[120px] p-6 bg-white rounded-xl shadow-md"
+          : "w-full max-w-[700px] h-[293.6px] mx-auto mt-[120px] p-6 bg-white rounded-xl shadow-md"
+      }
+    >
+      <h2 className="text-2xl font-semibold mb-6">Детали профиля</h2>
+  
+      <div className={
+        user.role === "client"
+          ? "flex justify-center items-center gap-6 border rounded-lg p-6 w-full max-w-[651.9px] h-[177.6px]"
+          : "flex justify-center items-center gap-6 border rounded-lg p-6 w-full max-w-[651.9px] h-[189.6px]"
+      }>
         <div className="w-32 h-32 bg-gray-200 rounded-full animate-pulse"></div>
-        <div className="h-[140px] flex-1 space-y-4">
-          <h3 className="text-xl font-bold bg-gray-200 h-6 rounded w-80 animate-pulse mx-auto text-center"></h3>
-          <div className="grid grid-cols-3 gap-4 text-sm text-gray-700">
-            <div>
-              <p className="font-medium text-gray-500">Роль</p>
-              <div className="flex justify-center">
-                <div className="flex items-center gap-1 text-sm">
-                  <span className="bg-gray-200 h-5 rounded w-20 animate-pulse"></span>
-                  <span className="bg-gray-200 h-5 rounded w-8 animate-pulse"></span>
+  
+        <div className="flex-1 space-y-4">
+          <h3 className="text-xl font-bold bg-gray-200 h-6 rounded w-75 animate-pulse mx-auto text-center"></h3>
+  
+          <div
+            className={
+              user.role === "client"
+                ? "inline-grid grid-cols-2 gap-4 text-sm text-gray-700 justify-items-start"
+                : "grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-700 justify-center items-start"
+            }
+          >
+            {/* Условие для рендеринга блока "Роль" для водителей */}
+            {user.role === "driver" && (
+              <div className="text-left ">
+                <p className="font-medium text-gray-500">Роль</p>
+                <div className="flex justify-left">
+                  <div className="flex items-center gap-1 text-sm">
+                    <span className="bg-gray-200 h-5 rounded w-20 animate-pulse"></span>
+                    <span className="bg-gray-200 h-5 rounded w-8 animate-pulse"></span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div>
+            )}
+  
+            {/* Общие данные для всех пользователей */}
+            <div className="text-left">
               <p className="font-medium text-gray-500">Номер телефона</p>
-              <p className="bg-gray-200 h-5 rounded w-28 animate-pulse mx-auto text-center"></p>
+              <p className="bg-gray-200 h-5 rounded w-28 animate-pulse text-left"></p>
             </div>
-            <div>
+  
+            <div className="text-left">
               <p className="font-medium text-gray-500">Электронная почта</p>
-              <p className="bg-gray-200 h-5 rounded w-36 animate-pulse mx-auto text-center"></p>
+              <p className="bg-gray-200 h-5 rounded w-36 animate-pulse text-left"></p>
             </div>
-            <div>
-              <p className="font-medium text-gray-500">Модель автомобиля</p>
-              <p className="bg-gray-200 h-5 rounded w-32 animate-pulse mx-auto text-center"></p>
-            </div>
-            <div>
-              <p className="font-medium text-gray-500">Номерной знак</p>
-              <p className="bg-gray-200 h-5 rounded w-32 animate-pulse mx-auto text-center"></p>
-            </div>
-            <div>
-              <p className="font-medium text-gray-500">Тариф</p>
-              <p className="bg-gray-200 h-5 rounded w-20 animate-pulse mx-auto text-center"></p>
-            </div>
+  
+            {/* Условие для рендеринга данных, относящихся к водителям */}
+            {user.role === "driver" && (
+              <>
+                <div className="text-left">
+                  <p className="font-medium text-gray-500">Модель автомобиля</p>
+                  <p className="bg-gray-200 h-5 rounded w-32 animate-pulse text-left"></p>
+                </div>
+  
+                <div className="text-left">
+                  <p className="font-medium text-gray-500">Номерной знак</p>
+                  <p className="bg-gray-200 h-5 rounded w-32 animate-pulse text-left"></p>
+                </div>
+  
+                <div className="text-left">
+                  <p className="font-medium text-gray-500">Тариф</p>
+                  <p className="bg-gray-200 h-5 rounded w-20 animate-pulse text-left"></p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
+  
 };
 
 const Profile = () => {
@@ -129,7 +163,7 @@ const Profile = () => {
     // Добавим задержку для отображения скелетона
     setTimeout(() => {
       setShowSkeleton(false); // После 1 секунды скрываем скелетон
-    }, 500); // Задержка на 1 секунду
+    }); // Задержка на 1 секунду
   }, []);
 
   if (isLoading || authLoading || showSkeleton) {
@@ -147,16 +181,22 @@ const Profile = () => {
   const isClient = user.role === "client";
 
   return (
-    <div className="max-w-4xl mx-auto mt-[120px] p-6 bg-white rounded-xl shadow-md">
+    <div
+      className={
+        isClient
+          ? "w-full max-w-[550px] mx-auto mt-[120px] p-6 bg-white rounded-xl shadow-md"
+          : "w-[700px] h-[293.6px] max-w-4xl mx-auto mt-[120px] p-6 bg-white rounded-xl shadow-md"
+      }
+    >
       <h2 className="text-2xl font-semibold mb-6">Детали профиля</h2>
-      <div className=" max-w-full flex items-start gap-6 border rounded-lg p-6">
+      <div className=" max-w-full flex items-center gap-6 border rounded-lg p-6">
         <img
           src={avatarDriver}
           alt="Profile"
           className="w-32 h-32 object-cover rounded-full m-0 p-0"
         />
         <div className="flex-1 space-y-4 max-w-full">
-          <h3 className="text-xl font-bold">
+          <h3 className="text-xl font-bold text-center">
             {isClient
               ? (userInfo as Client)?.client_p_i_b
               : (userInfo as Driver)?.driver_p_i_b}
@@ -172,8 +212,8 @@ const Profile = () => {
             {user.role === "driver" && userInfo && (
               <div>
                 <p className="font-medium text-gray-500">Роль</p>
-                <div className="flex justify-center">
-                  <div className="flex items-center gap-1 text-sm">
+                <div className="flex justify-left">
+                  <div className="flex items-left gap-1 text-sm">
                     <span>{isClient ? "Клиент" : "Водитель"}</span>
                     <span className="text-base leading-none">
                       ⭐ {(userInfo as Driver)?.average_rating}
@@ -183,7 +223,9 @@ const Profile = () => {
               </div>
             )}
             <div>
-              <p className="font-medium text-gray-500">Номер телефона</p>
+              <p className="font-medium text-gray-500 text-left">
+                Номер телефона
+              </p>
               <p>
                 {isClient
                   ? (userInfo as Client)?.client_phone_number

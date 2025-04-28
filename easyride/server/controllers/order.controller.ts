@@ -198,3 +198,27 @@ export const getOrdersByDriverId = async (
   }
 };
 
+export const cancelOrder = async (req: Request, res: Response): Promise<void> => {
+  const { orderId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE orders
+      SET order_order_status = 'Canceled'
+      WHERE order_id = $1
+      RETURNING *;
+      `,
+      [orderId]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ message: 'Order not found' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Order canceled successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

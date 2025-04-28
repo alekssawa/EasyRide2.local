@@ -38,15 +38,16 @@ const MyOrder: React.FC = () => {
 
   const handleCancel = async (orderId: string) => {
     try {
-      const response = await fetch(`/api/order/${orderId}/cancel`, {
-        method: "POST",
+      const response = await fetch(`http://localhost:5000/api/order/${orderId}/cancel`, {
+        method: "PUT",
         credentials: "include", // если используешь cookie
       });
 
       if (!response.ok) throw new Error("Не удалось отменить заказ");
 
       // Можно обновить список заказов или показать сообщение
-      console.log("Заказ отменён");
+      console.log('Заказ отменён',{orderId});
+      await fetchOrders(); // <-- Обновляем заказы после отмены
     } catch (error) {
       console.error("Ошибка при отмене заказа:", error);
     }
@@ -54,7 +55,7 @@ const MyOrder: React.FC = () => {
 
   const handleComplete = async (orderId: string) => {
     try {
-      const response = await fetch(`/api/order/${orderId}/complete`, {
+      const response = await fetch(`http://localhost:5000/api/order/${orderId}/complete`, {
         method: "POST",
         credentials: "include",
       });
@@ -67,41 +68,39 @@ const MyOrder: React.FC = () => {
     }
   };
 
-  useEffect(() => {
+  const fetchOrders = async () => {
     if (!user?.userId) {
       setLoading(false);
       return;
     }
-
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:5000/api/order/${user.role}/${user.userId}`,
-          { credentials: "include" }
-        );
-
-        if (res.status === 404) {
-          // Нет заказов — это не ошибка, просто пустой массив
-          setOrders([]);
-        } else if (!res.ok) {
-          throw new Error("Ошибка при получении заказов");
-        } else {
-          const data: Order[] = await res.json();
-          setOrders(data);
-        }
-      } catch (err) {
-        console.error("Ошибка при получении заказов:", err);
+  
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/order/${user.role}/${user.userId}`,
+        { credentials: "include" }
+      );
+  
+      if (res.status === 404) {
         setOrders([]);
-      } finally {
-        setLoading(false);
+      } else if (!res.ok) {
+        throw new Error("Ошибка при получении заказов");
+      } else {
+        const data: Order[] = await res.json();
+        setOrders(data);
       }
-    };
-
+    } catch (err) {
+      console.error("Ошибка при получении заказов:", err);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchOrders();
   }, [user]);
 
   if (loading) return <p>Loading...</p>;
-  if (orders.length === 0) return <p>У вас немає подорожі</p>;
+  if (orders.length === 0) return <p className="text-2xl mt-[120px] flex justify-center justify-items-center">У вас немає подорожі</p>;
 
   return (
       <div className="orders-list">
