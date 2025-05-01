@@ -1,6 +1,13 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 type View = "main" | "time" | "payment" | "class";
+
+// Тип для элементов, возвращаемых от Nominatim API
+interface NominatimResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+}
 
 export default function TaxiOrder() {
   const [view, setView] = useState<View>("main");
@@ -12,40 +19,141 @@ export default function TaxiOrder() {
     payment: "Готівка",
     carClass: "Стандарт",
   });
+  const [fromSuggestions, setFromSuggestions] = useState<string[]>([]); // Для предложений "Звідки"
+  const [toSuggestions, setToSuggestions] = useState<string[]>([]); // Для предложений "Куди"
+  const [fromTypingTimeout, setFromTypingTimeout] = useState<NodeJS.Timeout | null>(null); // Для отслеживания таймера "Звідки"
+  const [toTypingTimeout, setToTypingTimeout] = useState<NodeJS.Timeout | null>(null); // Для отслеживания таймера "Куди"
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    console.log("toSuggestions изменились:", toSuggestions);
+  }, [toSuggestions]);
+
+  useEffect(() => {
+    console.log("fromSuggestions изменились:", fromSuggestions);
+  }, [fromSuggestions]);
+
+  // Функция для обработки изменений в поле
+  const handleChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: keyof typeof formData
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (field === "from" && value.length > 2) {
+      // Для поля "Звідки"
+      if (fromTypingTimeout) {
+        clearTimeout(fromTypingTimeout);
+      }
+
+      const newTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(value + ", Odessa, Ukraine")}`
+          );
+          const data = (await res.json()) as NominatimResult[];
+          console.log(data);
+          setFromSuggestions(data.map((item) => item.display_name));
+        } catch (error) {
+          console.error("Ошибка при поиске адреса", error);
+        }
+      }, 500);
+      setFromTypingTimeout(newTimeout);
+    } else if (field === "to" && value.length > 2) {
+      // Для поля "Куди"
+      if (toTypingTimeout) {
+        clearTimeout(toTypingTimeout);
+      }
+
+      const newTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(value + ", Odessa, Ukraine")}`
+          );
+          const data = (await res.json()) as NominatimResult[];
+          console.log(data);
+          setToSuggestions(data.map((item) => item.display_name));
+          console.log(toSuggestions);
+        } catch (error) {
+          console.error("Ошибка при поиске адреса", error);
+        }
+      }, 500);
+      setToTypingTimeout(newTimeout);
+    } else {
+      // Очистка предложений, если поле пустое
+      if (field === "from") setFromSuggestions([]);
+      if (field === "to") setToSuggestions([]);
+    }
   };
+
+  // Функция для обработки выбора адреса
+  const handleSelectAddress = (address: string, field: keyof typeof formData) => {
+    setFormData((prev) => ({ ...prev, [field]: address }));
+    if (field === "from") setFromSuggestions([]);
+    if (field === "to") setToSuggestions([]);
+  };
+
 
   const renderMainView = () => (
     <div className="space-y-4 flex flex-col">
       <h2 className="text-xl font-bold text-center">Замовлення у м.Одеса</h2>
 
-      <input
-        type="text"
-        name="from"
-        placeholder="Звідки"
-        value={formData.from}
-        onChange={handleChange}
-        className="w-full p-3 border border-gray-300 rounded-md"
-      />
+      <div className="relative">
+        <input
+          type="text"
+          name="from"
+          placeholder="Звідки"
+          value={formData.from}
+          onChange={(e) => handleChange(e, "from")}
+          className="w-full p-3 border border-gray-300 rounded-md"
+        />
+        {fromSuggestions.length > 0 && (
+          <ul className="absolute w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-10">
+            {fromSuggestions.map((address, index) => (
+              <li
+                key={index}
+                onClick={() => handleSelectAddress(address, "from")}
+                className="p-2 cursor-pointer hover:bg-gray-100"
+              >
+                {address}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <input
         type="text"
         name="comment"
         placeholder="Коментар для водія"
         value={formData.comment}
-        onChange={handleChange}
+        onChange={(e) => handleChange(e, "comment")}
         className="w-full p-3 border border-gray-300 rounded-md"
       />
-      <input
-        type="text"
-        name="to"
-        placeholder="Куди"
-        value={formData.to}
-        onChange={handleChange}
-        className="w-full p-3 border border-gray-300 rounded-md"
-      />
+
+      <div className="relative">
+        <input
+          type="text"
+          name="to"
+          placeholder="Куди"
+          value={formData.to}
+          onChange={(e) => handleChange(e, "to")}
+          className="w-full p-3 border border-gray-300 rounded-md"
+        />
+        {toSuggestions.length > 0 && (
+          <ul className="absolute w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-10">
+            {toSuggestions.map((address, index) => (
+              <li
+                key={index}
+                onClick={() => handleSelectAddress(address, "to")}
+                className="p-2 cursor-pointer hover:bg-gray-100"
+              >
+                {address}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div
         onClick={() => setView("time")}
@@ -71,7 +179,6 @@ export default function TaxiOrder() {
         <span className="font-semibold">{formData.carClass}</span>
       </div>
 
-      {/* Price + Button */}
       <div className="flex justify-between items-center mt-4">
         <div className="flex items-center space-x-2">
           <img src="/taxi-icon.png" alt="Taxi" className="w-8 h-8" />

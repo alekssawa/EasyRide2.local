@@ -198,6 +198,29 @@ export const getOrdersByDriverId = async (
   }
 };
 
+export const getFreeDrivers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT d.driver_id AS id, t.tariff_name AS tariff
+      FROM drivers d
+      JOIN cars c ON d.driver_car_id = c.car_id
+      JOIN tariffs t ON c.car_tariff_id = t.tariff_id
+      WHERE d.driver_id NOT IN (
+        SELECT order_driver_id
+        FROM orders
+        WHERE order_order_status = 'In progress'
+      )
+      ORDER BY d.driver_id ASC;
+      `
+    );
+
+    res.status(200).json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const cancelOrder = async (req: Request, res: Response): Promise<void> => {
   const { orderId } = req.params;
 

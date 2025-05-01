@@ -186,7 +186,7 @@ export const checkAuth = async (req: Request, res: Response): Promise<void> => {
     }
 
     const { id, role } = result.rows[0];
-    console.log(id,role);
+    // console.log(id,role);
 
     res.json({
       authenticated: true,
