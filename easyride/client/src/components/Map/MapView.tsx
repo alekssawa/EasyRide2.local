@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+import markerCarImage from "../../assets/img/MarkerCar.png";
+
 const getBoroughColor = (borough: string) => {
   switch (borough) {
     case "Khadzhybeiskyi":
@@ -18,12 +20,11 @@ const getBoroughColor = (borough: string) => {
   }
 };
 
-
 interface DriverWithCoordinates {
   id: string;
   tariff: string;
   coordinates: [number, number];
-  borough: string;  // Добавлено поле для района
+  borough: string; // Добавлено поле для района
 }
 interface Geometry {
   type: string;
@@ -47,11 +48,12 @@ interface Boundary {
 
 const boroughs = ["Khadzhybeiskyi", "Kyivskyi", "Peresypskyi", "Prymorskyi"];
 
-const getIcon = (color: string) => {
-  return new L.DivIcon({
-    className: "leaflet-div-icon",
-    html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%;"></div>`,
-    iconSize: [20, 20],
+const getIcon = () => {
+  return new L.Icon({
+    iconUrl: markerCarImage,  // Путь к изображению
+    iconSize: [128/4, 160/4], // Оригинальный размер иконки
+    iconAnchor: [64/4, 80/4], // Точка, в которой иконка будет привязана к карте (центр изображения)
+    popupAnchor: [0, -80/4], // Расположение всплывающего окна
   });
 };
 
@@ -127,30 +129,32 @@ const MapView: React.FC = () => {
   useEffect(() => {
     const distributeDrivers = async () => {
       try {
-        const driverRes = await fetch("http://localhost:5000/api/order/getFreeDrivers");
+        const driverRes = await fetch(
+          "http://localhost:5000/api/order/getFreeDrivers"
+        );
         const drivers: DriverWithCoordinates[] = await driverRes.json();
 
-        console.log(drivers)
-    
+        console.log(drivers);
+
         if (!drivers || drivers.length === 0) {
           setError("Нет свободных водителей.");
           return;
         }
-    
+
         const allDriversWithCoords: DriverWithCoordinates[] = [];
-    
+
         // Пример: Для каждого водителя назначаем район один раз
         let boroughIndex = 0; // Индекс для района
-    
+
         for (const driver of drivers) {
           const borough = boroughs[boroughIndex];
           const roads = await loadRoads(borough);
-    
+
           if (!roads || roads.length === 0) {
             console.warn(`Нет дорог для района ${borough}`);
             continue;
           }
-    
+
           const point = placeDriverOnRoads(roads);
           allDriversWithCoords.push({
             id: driver.id,
@@ -158,11 +162,11 @@ const MapView: React.FC = () => {
             coordinates: point,
             borough: borough, // Присваиваем район водителю
           });
-    
+
           // Перемещаемся к следующему району для следующего водителя
           boroughIndex = (boroughIndex + 1) % boroughs.length;
         }
-    
+
         setDriversWithCoords(allDriversWithCoords);
       } catch (err) {
         setError("Ошибка распределения водителей.");
@@ -201,12 +205,11 @@ const MapView: React.FC = () => {
         ))}
 
         {driversWithCoords.map((driver, index) => {
-          const driverColor = getBoroughColor(driver.borough); // Используем район для получения цвета
           return (
             <Marker
               key={`${driver.id}-${index}`}
               position={[driver.coordinates[1], driver.coordinates[0]]}
-              icon={getIcon(driverColor)} // Используем цвет для иконки
+              icon={getIcon()} // Получаем иконку с изображением
             >
               <Popup>
                 {driver.id} - {driver.tariff}
