@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 
+import MapView from "../Map/MapView"; // Update the path as needed
 type View = "main" | "time" | "payment" | "class";
 
-// Тип для элементов, возвращаемых от Nominatim API
 interface NominatimResult {
+  display_name: string;
   lat: string;
   lon: string;
-  display_name: string;
 }
 
 export default function TaxiOrder() {
@@ -19,10 +19,13 @@ export default function TaxiOrder() {
     payment: "Готівка",
     carClass: "Стандарт",
   });
-  const [fromSuggestions, setFromSuggestions] = useState<string[]>([]); // Для предложений "Звідки"
-  const [toSuggestions, setToSuggestions] = useState<string[]>([]); // Для предложений "Куди"
-  const [fromTypingTimeout, setFromTypingTimeout] = useState<NodeJS.Timeout | null>(null); // Для отслеживания таймера "Звідки"
-  const [toTypingTimeout, setToTypingTimeout] = useState<NodeJS.Timeout | null>(null); // Для отслеживания таймера "Куди"
+  const [fromSuggestions, setFromSuggestions] = useState<NominatimResult[]>([]);
+  const [toSuggestions, setToSuggestions] = useState<NominatimResult[]>([]);
+  const [fromTypingTimeout, setFromTypingTimeout] =
+    useState<NodeJS.Timeout | null>(null);
+  const [toTypingTimeout, setToTypingTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
   useEffect(() => {
     console.log("toSuggestions изменились:", toSuggestions);
@@ -32,7 +35,6 @@ export default function TaxiOrder() {
     console.log("fromSuggestions изменились:", fromSuggestions);
   }, [fromSuggestions]);
 
-  // Функция для обработки изменений в поле
   const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     field: keyof typeof formData
@@ -41,7 +43,6 @@ export default function TaxiOrder() {
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (field === "from" && value.length > 2) {
-      // Для поля "Звідки"
       if (fromTypingTimeout) {
         clearTimeout(fromTypingTimeout);
       }
@@ -49,18 +50,18 @@ export default function TaxiOrder() {
       const newTimeout = setTimeout(async () => {
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(value + ", Odessa, Ukraine")}`
+            `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(
+              value + ", Odessa, Ukraine"
+            )}`
           );
           const data = (await res.json()) as NominatimResult[];
-          console.log(data);
-          setFromSuggestions(data.map((item) => item.display_name));
+          setFromSuggestions(data);
         } catch (error) {
           console.error("Ошибка при поиске адреса", error);
         }
       }, 500);
       setFromTypingTimeout(newTimeout);
     } else if (field === "to" && value.length > 2) {
-      // Для поля "Куди"
       if (toTypingTimeout) {
         clearTimeout(toTypingTimeout);
       }
@@ -68,31 +69,31 @@ export default function TaxiOrder() {
       const newTimeout = setTimeout(async () => {
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(value + ", Odessa, Ukraine")}`
+            `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(
+              value + ", Odessa, Ukraine"
+            )}`
           );
           const data = (await res.json()) as NominatimResult[];
-          console.log(data);
-          setToSuggestions(data.map((item) => item.display_name));
-          console.log(toSuggestions);
+          setToSuggestions(data);
         } catch (error) {
           console.error("Ошибка при поиске адреса", error);
         }
       }, 500);
       setToTypingTimeout(newTimeout);
     } else {
-      // Очистка предложений, если поле пустое
       if (field === "from") setFromSuggestions([]);
       if (field === "to") setToSuggestions([]);
     }
   };
 
-  // Функция для обработки выбора адреса
-  const handleSelectAddress = (address: string, field: keyof typeof formData) => {
-    setFormData((prev) => ({ ...prev, [field]: address }));
+  const handleSelectAddress = (
+    address: NominatimResult,
+    field: keyof typeof formData
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: address.display_name }));
     if (field === "from") setFromSuggestions([]);
     if (field === "to") setToSuggestions([]);
   };
-
 
   const renderMainView = () => (
     <div className="space-y-4 flex flex-col">
@@ -109,13 +110,13 @@ export default function TaxiOrder() {
         />
         {fromSuggestions.length > 0 && (
           <ul className="absolute w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-10">
-            {fromSuggestions.map((address, index) => (
+            {fromSuggestions.map((item, index) => (
               <li
                 key={index}
-                onClick={() => handleSelectAddress(address, "from")}
+                onClick={() => handleSelectAddress(item, "from")}
                 className="p-2 cursor-pointer hover:bg-gray-100"
               >
-                {address}
+                {item.display_name}
               </li>
             ))}
           </ul>
@@ -142,13 +143,13 @@ export default function TaxiOrder() {
         />
         {toSuggestions.length > 0 && (
           <ul className="absolute w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-10">
-            {toSuggestions.map((address, index) => (
+            {toSuggestions.map((item, index) => (
               <li
                 key={index}
-                onClick={() => handleSelectAddress(address, "to")}
+                onClick={() => handleSelectAddress(item, "to")}
                 className="p-2 cursor-pointer hover:bg-gray-100"
               >
-                {address}
+                {item.display_name}
               </li>
             ))}
           </ul>
@@ -233,10 +234,24 @@ export default function TaxiOrder() {
             "Через 30 хвилин",
             "Через 1 годину",
           ])}
-        {view === "payment" && renderSelectView("payment", ["Готівка", "Карта"])}
+        {view === "payment" &&
+          renderSelectView("payment", ["Готівка", "Карта"])}
         {view === "class" &&
           renderSelectView("class", ["Стандарт", "Комфорт", "Бізнес"])}
       </div>
+
+      {/*FIXME: Исправить что с MapView не отобращается Menu */}
+      {/* <MapView
+        fromSuggestions={[{
+          lat: 50.4501, lon: 30.5236,
+          display_name: "fromSuggestions"
+        }]}
+
+        toSuggestions={[{
+          lat: 48.8566, lon: 2.3522,
+          display_name: "toSuggestions"
+        }]}
+      /> */}
     </div>
   );
 }
