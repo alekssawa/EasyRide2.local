@@ -21,8 +21,9 @@ const getBoroughColor = (borough: string) => {
 };
 
 interface MapViewProps {
-  fromSuggestions: { display_name: string; lat: number; lon: number }[];
-  toSuggestions: { display_name: string; lat: number; lon: number }[];
+  fromSuggestions: { lat: number; lon: number; display_name: string }[]; // Add fromSuggestions
+  toSuggestions: { lat: number; lon: number; display_name: string }[];     // Add toSuggestions
+  zoom: number;
 }
 
 interface DriverWithCoordinates {
@@ -49,7 +50,7 @@ interface Road {
 
 interface Boundary {
   borough: string;
-  coordinates: [number, number][];
+  coordinates: [number, number][]; // Используем тип координат
 }
 
 const boroughs = ["Khadzhybeiskyi", "Kyivskyi", "Peresypskyi", "Prymorskyi"];
@@ -144,17 +145,11 @@ const placeDriverOnRoads = (roads: Road[]): [number, number] => {
 };
 
 const MapView: React.FC<MapViewProps> = ({
-  fromSuggestions = [
-    { lat: 46.4361407, lon: 30.7187213, display_name: "fromSuggestions" },
-  ],
-  toSuggestions = [
-    { lat: 46.4053778, lon: 30.7449638, display_name: "toSuggestions" },
-  ],
+  fromSuggestions,
+  toSuggestions,
+  zoom,
 }) => {
-  console.log(fromSuggestions, toSuggestions);
-  const [driversWithCoords, setDriversWithCoords] = useState<DriverWithCoordinates[]>(
-    []
-  );
+  const [driversWithCoords, setDriversWithCoords] = useState<DriverWithCoordinates[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [boundaries, setBoundaries] = useState<Boundary[]>([]);
   const [roadsData, setRoadsData] = useState<Record<string, Road[]>>({});
@@ -218,16 +213,16 @@ const MapView: React.FC<MapViewProps> = ({
 
   return (
     <div style={{ height: "500px" }}>
-      {fromSuggestions?.length === 0 && (
+      {fromSuggestions.length === 0 && (
         <div>Нет предложений для маршрута от.</div>
       )}
-      {toSuggestions?.length === 0 && (
+      {toSuggestions.length === 0 && (
         <div>Нет предложений для маршрута до.</div>
       )}
 
       <MapContainer
         center={[46.4825, 30.7326]}
-        zoom={12}
+        zoom={zoom}
         style={{ width: "100%", height: "100%" }}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -252,7 +247,7 @@ const MapView: React.FC<MapViewProps> = ({
           </Marker>
         ))}
 
-         {boundaries.map((boundary) => (
+        {boundaries.map((boundary) => (
           <Polygon
             key={boundary.borough}
             positions={boundary.coordinates}
@@ -266,16 +261,12 @@ const MapView: React.FC<MapViewProps> = ({
 
         {driversWithCoords.map((driver) => (
           <Marker
-            key={`${driver.id}`}
-            position={[driver.coordinates[1], driver.coordinates[0]]}
-            icon={getCarIcon()} // Иконка для водителей
+            key={driver.id}
+            position={[driver.coordinates[1], driver.coordinates[0]]} // Учитываем правильный порядок координат
+            icon={getCarIcon()} // Используем иконку водителя
           >
             <Popup>
-              {driver.id} - {driver.tariff}
-              <br />
-              Район: {driver.borough}
-              <br />
-              Координаты: {driver.coordinates[1]}, {driver.coordinates[0]}
+              {`ID: ${driver.id}, Тариф: ${driver.tariff}, Район: ${driver.borough}`}
             </Popup>
           </Marker>
         ))}

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 
-import MapView from "../Map/MapView"; // Update the path as needed
+// Типы для представления данных
 type View = "main" | "time" | "payment" | "class";
 
 interface NominatimResult {
@@ -9,9 +9,30 @@ interface NominatimResult {
   lon: string;
 }
 
-export default function TaxiOrder() {
+type FormData = {
+  from: string;
+  to: string;
+  comment?: string;
+  time?: string;
+  payment?: string;
+  carClass?: string;
+};
+
+interface Coordinates {
+  lat: number;
+  lon: number;
+  display_name: string;
+}
+
+type TaxiOrderProps = {
+  onSubmit?: (data: FormData) => void;
+  setFromCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
+  setToCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
+};
+
+export default function TaxiOrder({ onSubmit, setFromCoordinates, setToCoordinates }: TaxiOrderProps) {
   const [view, setView] = useState<View>("main");
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     from: "",
     comment: "",
     to: "",
@@ -21,65 +42,39 @@ export default function TaxiOrder() {
   });
   const [fromSuggestions, setFromSuggestions] = useState<NominatimResult[]>([]);
   const [toSuggestions, setToSuggestions] = useState<NominatimResult[]>([]);
-  const [fromTypingTimeout, setFromTypingTimeout] =
-    useState<NodeJS.Timeout | null>(null);
-  const [toTypingTimeout, setToTypingTimeout] = useState<NodeJS.Timeout | null>(
-    null
-  );
 
-  useEffect(() => {
-    console.log("toSuggestions изменились:", toSuggestions);
-  }, [toSuggestions]);
-
-  useEffect(() => {
-    console.log("fromSuggestions изменились:", fromSuggestions);
-  }, [fromSuggestions]);
+  const fromTypingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const toTypingTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: keyof typeof formData
+    field: keyof FormData
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
+    const fetchSuggestions = async (input: string, setter: React.Dispatch<React.SetStateAction<NominatimResult[]>>) => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(input + ", Odessa, Ukraine")}`
+        );
+        const data = (await res.json()) as NominatimResult[];
+        setter(data);
+      } catch (error) {
+        console.error("Ошибка при поиске адреса", error);
+      }
+    };
+
     if (field === "from" && value.length > 2) {
-      if (fromTypingTimeout) {
-        clearTimeout(fromTypingTimeout);
-      }
-
-      const newTimeout = setTimeout(async () => {
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(
-              value + ", Odessa, Ukraine"
-            )}`
-          );
-          const data = (await res.json()) as NominatimResult[];
-          setFromSuggestions(data);
-        } catch (error) {
-          console.error("Ошибка при поиске адреса", error);
-        }
+      if (fromTypingTimeout.current) clearTimeout(fromTypingTimeout.current);
+      fromTypingTimeout.current = setTimeout(() => {
+        fetchSuggestions(value, setFromSuggestions);
       }, 500);
-      setFromTypingTimeout(newTimeout);
     } else if (field === "to" && value.length > 2) {
-      if (toTypingTimeout) {
-        clearTimeout(toTypingTimeout);
-      }
-
-      const newTimeout = setTimeout(async () => {
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(
-              value + ", Odessa, Ukraine"
-            )}`
-          );
-          const data = (await res.json()) as NominatimResult[];
-          setToSuggestions(data);
-        } catch (error) {
-          console.error("Ошибка при поиске адреса", error);
-        }
+      if (toTypingTimeout.current) clearTimeout(toTypingTimeout.current);
+      toTypingTimeout.current = setTimeout(() => {
+        fetchSuggestions(value, setToSuggestions);
       }, 500);
-      setToTypingTimeout(newTimeout);
     } else {
       if (field === "from") setFromSuggestions([]);
       if (field === "to") setToSuggestions([]);
@@ -88,11 +83,35 @@ export default function TaxiOrder() {
 
   const handleSelectAddress = (
     address: NominatimResult,
-    field: keyof typeof formData
+    field: keyof FormData
   ) => {
+    const newCoordinates: Coordinates = {
+      lat: parseFloat(address.lat),
+      lon: parseFloat(address.lon),
+      display_name: address.display_name,
+    };
+
     setFormData((prev) => ({ ...prev, [field]: address.display_name }));
+
+    if (field === "from") {
+      setFromCoordinates([newCoordinates]);
+    }
+    if (field === "to") {
+      setToCoordinates([newCoordinates]);
+    }
+
     if (field === "from") setFromSuggestions([]);
     if (field === "to") setToSuggestions([]);
+  };
+
+  const handleSubmit = () => {
+    if (formData.from && formData.to) {
+      if (onSubmit) {
+        onSubmit({ from: formData.from, to: formData.to });
+      }
+    } else {
+      alert("Будь ласка, заповніть поля 'Звідки' та 'Куди'");
+    }
   };
 
   const renderMainView = () => (
@@ -188,7 +207,10 @@ export default function TaxiOrder() {
         <div className="font-bold text-lg">80₴</div>
       </div>
 
-      <button className="mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 rounded-lg">
+      <button
+        onClick={handleSubmit}
+        className="mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 rounded-lg"
+      >
         Замовити таксі
       </button>
     </div>
@@ -207,12 +229,14 @@ export default function TaxiOrder() {
         <div
           key={option}
           onClick={() => {
-            if (type === "time")
-              setFormData((prev) => ({ ...prev, time: option }));
-            if (type === "payment")
-              setFormData((prev) => ({ ...prev, payment: option }));
-            if (type === "class")
-              setFormData((prev) => ({ ...prev, carClass: option }));
+            setFormData((prev) => ({
+              ...prev,
+              [type === "time"
+                ? "time"
+                : type === "payment"
+                ? "payment"
+                : "carClass"]: option,
+            }));
             setView("main");
           }}
           className="p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100"
@@ -239,19 +263,6 @@ export default function TaxiOrder() {
         {view === "class" &&
           renderSelectView("class", ["Стандарт", "Комфорт", "Бізнес"])}
       </div>
-
-      {/*FIXME: Исправить что с MapView не отобращается Menu */}
-      {/* <MapView
-        fromSuggestions={[{
-          lat: 50.4501, lon: 30.5236,
-          display_name: "fromSuggestions"
-        }]}
-
-        toSuggestions={[{
-          lat: 48.8566, lon: 2.3522,
-          display_name: "toSuggestions"
-        }]}
-      /> */}
     </div>
   );
 }
