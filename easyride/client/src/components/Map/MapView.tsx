@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
+import { useEffect, useState, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+
+import "leaflet-routing-machine";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
 import markerCarImage from "../../assets/img/MarkerCar.png";
 
@@ -24,6 +27,9 @@ interface MapViewProps {
   fromSuggestions: { lat: number; lon: number; display_name: string }[]; // Add fromSuggestions
   toSuggestions: { lat: number; lon: number; display_name: string }[];     // Add toSuggestions
   zoom: number;
+  selectedTariff: string | null;
+  searchTriggered: boolean; // ✅ добавлено
+  setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 interface DriverWithCoordinates {
@@ -144,15 +150,48 @@ const placeDriverOnRoads = (roads: Road[]): [number, number] => {
   }
 };
 
+const findNearestDriver = (
+  from: [number, number],
+  drivers: DriverWithCoordinates[],
+  selectedTariff: string | null
+): DriverWithCoordinates | null => {
+  let minDistance = Infinity;
+  let nearestDriver: DriverWithCoordinates | null = null;
+
+  const filteredDrivers = selectedTariff
+    ? drivers.filter((driver) => driver.tariff === selectedTariff)
+    : drivers;
+
+  for (const driver of filteredDrivers) {
+    const dist = Math.hypot(
+      driver.coordinates[1] - from[0],
+      driver.coordinates[0] - from[1]
+    );
+    if (dist < minDistance) {
+      minDistance = dist;
+      nearestDriver = driver;
+    }
+  }
+
+  return nearestDriver;
+};
+
 const MapView: React.FC<MapViewProps> = ({
   fromSuggestions,
   toSuggestions,
   zoom,
+  selectedTariff,
+  searchTriggered,
+  setSearchTriggered,
 }) => {
   const [driversWithCoords, setDriversWithCoords] = useState<DriverWithCoordinates[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [boundaries, setBoundaries] = useState<Boundary[]>([]);
   const [roadsData, setRoadsData] = useState<Record<string, Road[]>>({});
+
+  const routingControlRef = useRef<L.Routing.Control | null>(null); // Ссылка на маршрут
+
+  const map = useMap(); // Получаем объект карты через useMap внутри компонента
 
   useEffect(() => {
     loadBoundaries(setBoundaries);
@@ -162,9 +201,7 @@ const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     const distributeDrivers = async () => {
       try {
-        const driverRes = await fetch(
-          "http://localhost:5000/api/order/getFreeDrivers"
-        );
+        const driverRes = await fetch("http://localhost:5000/api/order/getFreeDrivers");
         const drivers: DriverWithCoordinates[] = await driverRes.json();
 
         if (!drivers || drivers.length === 0) {
@@ -207,23 +244,82 @@ const MapView: React.FC<MapViewProps> = ({
     }
   }, [roadsData]);
 
+  useEffect(() => {
+    if (
+      searchTriggered && // ✅ добавлено
+      fromSuggestions.length > 0 &&
+      toSuggestions.length > 0 &&
+      driversWithCoords.length > 0 &&
+      map
+    ) {
+      console.log("nearestDriver");
+
+      const from = [fromSuggestions[0].lat, fromSuggestions[0].lon] as [number, number];
+      const to = [toSuggestions[0].lat, toSuggestions[0].lon] as [number, number];
+
+      const nearestDriver = findNearestDriver(from, driversWithCoords, selectedTariff);
+
+      if (routingControlRef.current) {
+        routingControlRef.current.remove(); // Удаляем старый маршрут
+      }
+
+      const routePoints = [];
+
+      if (nearestDriver) {
+        routePoints.push(L.latLng(from[0], from[1]));
+        routePoints.push(L.latLng(nearestDriver.coordinates[1], nearestDriver.coordinates[0]));
+        routePoints.push(L.latLng(to[0], to[1]));
+      }
+
+      routingControlRef.current = L.Routing.control({
+        waypoints: routePoints,
+        lineOptions: {
+          styles: [{ color: "purple", weight: 4 }],
+          extendToWaypoints: true,
+          missingRouteTolerance: 10,
+        },
+        addWaypoints: false,
+        fitSelectedRoutes: true,
+        plan: L.Routing.plan(routePoints, {
+          draggableWaypoints: false,
+          addWaypoints: false,
+          createMarker: () => false, // Не создавать маркеры
+        }),
+      }).addTo(map);
+
+      setSearchTriggered(false); // ✅ сбрасываем, чтобы можно было искать повторно
+    }
+    else {
+      console.log("fail nearestDriver");
+    }
+  }, [
+    searchTriggered, // ✅ добавлено в зависимости
+    fromSuggestions,
+    toSuggestions,
+    driversWithCoords,
+    selectedTariff,
+    setSearchTriggered,
+    map, // добавили зависимость от map
+  ]);
+
   if (error) {
     return <div className="p-4 text-red-600">{error}</div>;
   }
 
   return (
     <div style={{ height: "500px" }}>
-      {fromSuggestions.length === 0 && (
+      {/* {fromSuggestions.length === 0 && (
         <div>Нет предложений для маршрута от.</div>
       )}
       {toSuggestions.length === 0 && (
         <div>Нет предложений для маршрута до.</div>
-      )}
+      )} */}
 
       <MapContainer
         center={[46.4825, 30.7326]}
         zoom={zoom}
         style={{ width: "100%", height: "100%" }}
+        
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 

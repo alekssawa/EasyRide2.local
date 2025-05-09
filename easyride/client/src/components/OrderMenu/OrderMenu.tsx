@@ -25,20 +25,21 @@ interface Coordinates {
 }
 
 type TaxiOrderProps = {
-  onSubmit?: (data: FormData) => void;
   setFromCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
   setToCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
+  setSelectedTariff: (tariff: string) => void;
+  setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>; // <-- добавлено
 };
 
-export default function TaxiOrder({ onSubmit, setFromCoordinates, setToCoordinates }: TaxiOrderProps) {
+export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSelectedTariff, setSearchTriggered}: TaxiOrderProps) {
   const [view, setView] = useState<View>("main");
   const [formData, setFormData] = useState<FormData>({
     from: "",
     comment: "",
     to: "",
     time: "На зараз",
-    payment: "Готівка",
-    carClass: "Стандарт",
+    payment: "Cash",
+    carClass: "Standard",
   });
   const [fromSuggestions, setFromSuggestions] = useState<NominatimResult[]>([]);
   const [toSuggestions, setToSuggestions] = useState<NominatimResult[]>([]);
@@ -104,16 +105,21 @@ export default function TaxiOrder({ onSubmit, setFromCoordinates, setToCoordinat
     if (field === "to") setToSuggestions([]);
   };
 
+  const handleTariffChange = (tariff: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      carClass: tariff,
+    }));
+    setSelectedTariff(tariff); // уведомим родителя
+  };
+
   const handleSubmit = () => {
     if (formData.from && formData.to) {
-      if (onSubmit) {
-        onSubmit({ from: formData.from, to: formData.to });
-      }
+      setSearchTriggered(true);
     } else {
       alert("Будь ласка, заповніть поля 'Звідки' та 'Куди'");
     }
   };
-
   const renderMainView = () => (
     <div className="space-y-4 flex flex-col">
       <h2 className="text-xl font-bold text-center">Замовлення у м.Одеса</h2>
@@ -229,14 +235,14 @@ export default function TaxiOrder({ onSubmit, setFromCoordinates, setToCoordinat
         <div
           key={option}
           onClick={() => {
-            setFormData((prev) => ({
-              ...prev,
-              [type === "time"
-                ? "time"
-                : type === "payment"
-                ? "payment"
-                : "carClass"]: option,
-            }));
+            if (type === "class") {
+              handleTariffChange(option);
+            } else {
+              setFormData((prev) => ({
+                ...prev,
+                [type]: option,
+              }));
+            }
             setView("main");
           }}
           className="p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100"
@@ -261,7 +267,7 @@ export default function TaxiOrder({ onSubmit, setFromCoordinates, setToCoordinat
         {view === "payment" &&
           renderSelectView("payment", ["Готівка", "Карта"])}
         {view === "class" &&
-          renderSelectView("class", ["Стандарт", "Комфорт", "Бізнес"])}
+          renderSelectView("class", ["Standard", "Comfort", "Business", "Minibus"])}
       </div>
     </div>
   );
