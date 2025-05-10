@@ -1,5 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup /*Polygon*/,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -8,24 +13,26 @@ import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
 import markerCarImage from "../../assets/img/MarkerCar.png";
 
-const getBoroughColor = (borough: string) => {
-  switch (borough) {
-    case "Khadzhybeiskyi":
-      return "red";
-    case "Kyivskyi":
-      return "green";
-    case "Peresypskyi":
-      return "blue";
-    case "Prymorskyi":
-      return "orange";
-    default:
-      return "gray";
-  }
-};
+import TripSummary from "../OrderMenu/TripSummary";
+
+// const getBoroughColor = (borough: string) => {
+//   switch (borough) {
+//     case "Khadzhybeiskyi":
+//       return "red";
+//     case "Kyivskyi":
+//       return "green";
+//     case "Peresypskyi":
+//       return "blue";
+//     case "Prymorskyi":
+//       return "orange";
+//     default:
+//       return "gray";
+//   }
+// };
 
 interface MapViewProps {
   fromSuggestions: { lat: number; lon: number; display_name: string }[]; // Add fromSuggestions
-  toSuggestions: { lat: number; lon: number; display_name: string }[];     // Add toSuggestions
+  toSuggestions: { lat: number; lon: number; display_name: string }[]; // Add toSuggestions
   zoom: number;
   selectedTariff: string | null;
   searchTriggered: boolean; // ✅ добавлено
@@ -158,6 +165,8 @@ const findNearestDriver = (
   let minDistance = Infinity;
   let nearestDriver: DriverWithCoordinates | null = null;
 
+  console.log(from, drivers, selectedTariff);
+
   const filteredDrivers = selectedTariff
     ? drivers.filter((driver) => driver.tariff === selectedTariff)
     : drivers;
@@ -184,14 +193,36 @@ const MapView: React.FC<MapViewProps> = ({
   searchTriggered,
   setSearchTriggered,
 }) => {
-  const [driversWithCoords, setDriversWithCoords] = useState<DriverWithCoordinates[]>([]);
+  const [driversWithCoords, setDriversWithCoords] = useState<
+    DriverWithCoordinates[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
-  const [boundaries, setBoundaries] = useState<Boundary[]>([]);
+  const [, /*boundaries*/ setBoundaries] = useState<Boundary[]>([]);
   const [roadsData, setRoadsData] = useState<Record<string, Road[]>>({});
 
-  const routingControlRef = useRef<L.Routing.Control | null>(null); // Ссылка на маршрут
+  const [driverToFromDistance, setDriverToFromDistance] = useState(0);
+  const [driverToFromTime, setDriverToFromTime] = useState(0);
+  const [fromToToDistance, setFromToToDistance] = useState(0);
+  const [fromToToTime, setFromToToTime] = useState(0);
+  const [totalDistance, setTotalDistance] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
 
-  const map = useMap(); // Получаем объект карты через useMap внутри компонента
+  const mapRef = useRef<L.Map | null>(null); // Используем useRef вместо useState
+  const driverToFromRef = useRef<L.Routing.Control | null>(null);
+  const fromToDestRef = useRef<L.Routing.Control | null>(null);
+  const route1SummaryRef = useRef<{ distance: number; time: number } | null>(
+    null
+  );
+
+  // const routingControlRef = useRef<L.Routing.Control | null>(null); // Ссылка на маршрут
+
+  // console.log(searchTriggered);
+
+  // const map = useMap(); // Получаем объект карты через useMap внутри компонента
+
+  // useEffect(() => {
+  //   console.log("🔁 MapView: searchTriggered изменился:", searchTriggered);
+  // }, [searchTriggered]);
 
   useEffect(() => {
     loadBoundaries(setBoundaries);
@@ -201,7 +232,9 @@ const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     const distributeDrivers = async () => {
       try {
-        const driverRes = await fetch("http://localhost:5000/api/order/getFreeDrivers");
+        const driverRes = await fetch(
+          "http://localhost:5000/api/order/getFreeDrivers"
+        );
         const drivers: DriverWithCoordinates[] = await driverRes.json();
 
         if (!drivers || drivers.length === 0) {
@@ -246,60 +279,136 @@ const MapView: React.FC<MapViewProps> = ({
 
   useEffect(() => {
     if (
-      searchTriggered && // ✅ добавлено
+      searchTriggered &&
       fromSuggestions.length > 0 &&
       toSuggestions.length > 0 &&
       driversWithCoords.length > 0 &&
-      map
+      mapRef.current
     ) {
-      console.log("nearestDriver");
+      const from = [fromSuggestions[0].lat, fromSuggestions[0].lon] as [
+        number,
+        number
+      ];
+      const to = [toSuggestions[0].lat, toSuggestions[0].lon] as [
+        number,
+        number
+      ];
 
-      const from = [fromSuggestions[0].lat, fromSuggestions[0].lon] as [number, number];
-      const to = [toSuggestions[0].lat, toSuggestions[0].lon] as [number, number];
+      const nearestDriver = findNearestDriver(
+        from,
+        driversWithCoords,
+        selectedTariff
+      );
 
-      const nearestDriver = findNearestDriver(from, driversWithCoords, selectedTariff);
+      driverToFromRef.current?.remove();
+      fromToDestRef.current?.remove();
 
-      if (routingControlRef.current) {
-        routingControlRef.current.remove(); // Удаляем старый маршрут
+      if (!nearestDriver) {
+        console.log("No driver found");
+        return;
       }
 
-      const routePoints = [];
+      const map = mapRef.current;
 
-      if (nearestDriver) {
-        routePoints.push(L.latLng(from[0], from[1]));
-        routePoints.push(L.latLng(nearestDriver.coordinates[1], nearestDriver.coordinates[0]));
-        routePoints.push(L.latLng(to[0], to[1]));
-      }
+      const route1Waypoints = [
+        L.latLng(nearestDriver.coordinates[1], nearestDriver.coordinates[0]),
+        L.latLng(from[0], from[1]),
+      ];
 
-      routingControlRef.current = L.Routing.control({
-        waypoints: routePoints,
+      const route2Waypoints = [
+        L.latLng(from[0], from[1]),
+        L.latLng(to[0], to[1]),
+      ];
+
+      const allPoints = [...route1Waypoints, ...route2Waypoints];
+
+      driverToFromRef.current = L.Routing.control({
+        waypoints: route1Waypoints,
         lineOptions: {
-          styles: [{ color: "purple", weight: 4 }],
+          styles: [{ color: "blue", weight: 8, opacity: 0.6 }],
           extendToWaypoints: true,
           missingRouteTolerance: 10,
         },
         addWaypoints: false,
-        fitSelectedRoutes: true,
-        plan: L.Routing.plan(routePoints, {
-          draggableWaypoints: false,
-          addWaypoints: false,
-          createMarker: () => false, // Не создавать маркеры
+        fitSelectedRoutes: false,
+        show: false,
+        plan: L.Routing.plan(route1Waypoints, {
+          createMarker: () => false,
         }),
-      }).addTo(map);
+      })
+        .on("routesfound", (e) => {
+          const route = e.routes[0];
+          const distance = route.summary.totalDistance;
+          const time = route.summary.totalTime;
+          route1SummaryRef.current = { distance, time };
 
-      setSearchTriggered(false); // ✅ сбрасываем, чтобы можно было искать повторно
-    }
-    else {
-      console.log("fail nearestDriver");
+          setDriverToFromDistance(distance);
+          setDriverToFromTime(time);
+
+          const distanceKm = (distance / 1000).toFixed(2);
+          const timeMin = (time / 60).toFixed(1);
+          console.log(`Driver → from: ${distanceKm} км, ${timeMin} мин`);
+        })
+        .addTo(map);
+
+      // 🧍 From → To
+      fromToDestRef.current = L.Routing.control({
+        waypoints: route2Waypoints,
+        lineOptions: {
+          styles: [{ color: "green", weight: 4, opacity: 1 }],
+          extendToWaypoints: true,
+          missingRouteTolerance: 10,
+        },
+        addWaypoints: false,
+        fitSelectedRoutes: false,
+        show: false,
+        plan: L.Routing.plan(route2Waypoints, {
+          createMarker: () => false,
+        }),
+      })
+        .on("routesfound", (e) => {
+          const route = e.routes[0];
+          const distance2 = route.summary.totalDistance;
+          const time2 = route.summary.totalTime;
+
+          setFromToToDistance(distance2);
+          setFromToToTime(time2);
+
+          const distanceKm2 = (distance2 / 1000).toFixed(2);
+          const timeMin2 = (time2 / 60).toFixed(1);
+          console.log(`from → to: ${distanceKm2} км, ${timeMin2} мин`);
+
+          // 👉 Суммируем с первым маршрутом
+          const route1 = route1SummaryRef.current;
+          if (route1) {
+            const totalDistance = route1.distance + distance2;
+            const totalTime = route1.time + time2;
+            setTotalDistance(totalDistance);
+            setTotalTime(totalTime);
+            console.log(
+              `Total: ${(totalDistance / 1000).toFixed(2)} км, ${(
+                totalTime / 60
+              ).toFixed(1)} мин`
+            );
+          } else {
+            console.warn("⚠️ Первый маршрут ещё не готов.");
+          }
+        })
+        .addTo(map);
+
+      // 📍 Принудительно охватываем все точки камерой
+      const bounds = L.latLngBounds(allPoints);
+      map.fitBounds(bounds, { padding: [110, 110] });
+
+      setSearchTriggered(false);
     }
   }, [
-    searchTriggered, // ✅ добавлено в зависимости
+    searchTriggered,
     fromSuggestions,
     toSuggestions,
     driversWithCoords,
     selectedTariff,
     setSearchTriggered,
-    map, // добавили зависимость от map
   ]);
 
   if (error) {
@@ -308,18 +417,15 @@ const MapView: React.FC<MapViewProps> = ({
 
   return (
     <div style={{ height: "500px" }}>
-      {/* {fromSuggestions.length === 0 && (
-        <div>Нет предложений для маршрута от.</div>
-      )}
-      {toSuggestions.length === 0 && (
-        <div>Нет предложений для маршрута до.</div>
-      )} */}
-
       <MapContainer
         center={[46.4825, 30.7326]}
         zoom={zoom}
         style={{ width: "100%", height: "100%" }}
-        
+        ref={mapRef} // Используем ref вместо whenCreated
+        // whenReady={() => {
+        //   // Дополнительные действия при готовности карты
+        //   console.log("Map is ready");
+        // }}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
@@ -343,7 +449,7 @@ const MapView: React.FC<MapViewProps> = ({
           </Marker>
         ))}
 
-        {boundaries.map((boundary) => (
+        {/* {boundaries.map((boundary) => (
           <Polygon
             key={boundary.borough}
             positions={boundary.coordinates}
@@ -353,7 +459,7 @@ const MapView: React.FC<MapViewProps> = ({
               fillOpacity: 0.1,
             }}
           />
-        ))}
+        ))} */}
 
         {driversWithCoords.map((driver) => (
           <Marker
@@ -367,6 +473,14 @@ const MapView: React.FC<MapViewProps> = ({
           </Marker>
         ))}
       </MapContainer>
+      <TripSummary
+        driverToFromDistance={driverToFromDistance}
+        driverToFromTime={driverToFromTime}
+        fromToToDistance={fromToToDistance}
+        fromToToTime={fromToToTime}
+        totalDistance={totalDistance}
+        totalTime={totalTime}
+      />
     </div>
   );
 };

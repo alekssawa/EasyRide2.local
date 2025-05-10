@@ -115,6 +115,7 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
 
   const handleSubmit = () => {
     if (formData.from && formData.to) {
+      console.log("setSearchTriggered TRUE")
       setSearchTriggered(true);
     } else {
       alert("Будь ласка, заповніть поля 'Звідки' та 'Куди'");
@@ -217,7 +218,7 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
         onClick={handleSubmit}
         className="mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 rounded-lg"
       >
-        Замовити таксі
+        Знайти водія
       </button>
     </div>
   );

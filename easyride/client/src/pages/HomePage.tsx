@@ -12,8 +12,9 @@ interface Coordinates {
 const HomePage = () => {
   const [fromCoordinates, setFromCoordinates] = useState<Coordinates[]>([]);
   const [toCoordinates, setToCoordinates] = useState<Coordinates[]>([]);
-  const [selectedTariff, setSelectedTariff] = useState<string>("Стандарт");
+  const [selectedTariff, setSelectedTariff] = useState<string>("Standard");
   const [searchTriggered, setSearchTriggered] = useState(false);
+
 
   return (
     <div className="relative w-full h-screen">
