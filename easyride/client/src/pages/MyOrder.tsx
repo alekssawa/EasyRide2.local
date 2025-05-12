@@ -252,6 +252,8 @@ const MyOrder: React.FC = () => {
                         Отменить поездку
                       </button>
                     </div>
+
+                    {/* TODO: Сделать логику завершение поездки, payment type перенести в таблицу payments */}
                     <div className="flex flex-col w-full">
                       <button
                         className="w-full bg-gray-700 text-white py-3 rounded-lg text-sm hover:bg-gray-600 transition-all"

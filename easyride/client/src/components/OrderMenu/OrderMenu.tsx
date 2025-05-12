@@ -29,9 +29,26 @@ type TaxiOrderProps = {
   setToCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
   setSelectedTariff: (tariff: string) => void;
   setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>; // <-- добавлено
+
+  driverToFromDistance: number;
+  driverToFromTime: number;
+  fromToToDistance: number;
+  fromToToTime: number;
+  totalDistance: number;
+  totalTime: number;
 };
 
-export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSelectedTariff, setSearchTriggered}: TaxiOrderProps) {
+export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSelectedTariff, setSearchTriggered, driverToFromDistance,
+  driverToFromTime,
+  fromToToDistance,
+  fromToToTime,
+  totalDistance,
+  totalTime,}: TaxiOrderProps) {
+  const [isConfirmed, setIsConfirmed] = useState(false);
+    
+  const handleConfirm = () => {
+      setIsConfirmed(true);
+  };
   const [view, setView] = useState<View>("main");
   const [formData, setFormData] = useState<FormData>({
     from: "",
@@ -220,7 +237,40 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
       >
         Знайти водія
       </button>
+
+      <div className="absolute top-1/2 transform -translate-y-1/2 right-8 bg-white p-4 rounded-xl shadow-lg z-50">
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold">Маршрут:</h3>
+        <p>
+          Driver → From:{" "}
+          {(driverToFromDistance / 1000).toFixed(2)} км,{" "}
+          {(driverToFromTime / 60).toFixed(1)} мин
+        </p>
+        <p>
+          From → To:{" "}
+          {(fromToToDistance / 1000).toFixed(2)} км,{" "}
+          {(fromToToTime / 60).toFixed(1)} мин
+        </p>
+        <p>
+          Total:{" "}
+          {(totalDistance / 1000).toFixed(2)} км,{" "}
+          {(totalTime / 60).toFixed(1)} мин
+        </p>
+      </div>
+      {/* TODO: Сделать реализацию добавление заказа */}
+      <button
+        onClick={handleConfirm}
+        disabled={isConfirmed} // Блокируем кнопку после подтверждения
+        className={`${
+          isConfirmed ? "bg-gray-500 cursor-not-allowed" : "bg-green-500"
+        } text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none`}
+      >
+        {isConfirmed ? "Поездка подтверждена" : "Подтвердить поездку"}
+      </button>
     </div>
+    </div>
+
+    
   );
 
   const renderSelectView = (type: View, options: string[]) => (

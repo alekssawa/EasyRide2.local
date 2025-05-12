@@ -15,12 +15,12 @@ export const getTripHistoryByClientId = async (
         drivers.driver_p_i_b AS driver,
         tariffs.tariff_name AS tariff,
         payments.payment_amount AS amount,
-        trip_payment_type AS payment_type,
+        payments.payment_type AS payment_type,
         trip_start_time AS start_time,
         trip_end_time AS end_time,
         trip_client_start_location AS start_location,
         trip_client_destination AS destination,
-        trip_distance as distance,
+        trip_distance AS distance,
         COALESCE(c.car_model, 'Неизвестно') AS car_model,
         COALESCE(c.car_registration_plate, 'Неизвестно') AS car_registration_plate,
         COALESCE(AVG(reviews_drivers.review_rating), 0) AS average_rating
@@ -36,7 +36,7 @@ export const getTripHistoryByClientId = async (
         drivers.driver_p_i_b, 
         tariffs.tariff_name, 
         payments.payment_amount, 
-        trip_payment_type, 
+        payments.payment_type, 
         trip_start_time, 
         trip_end_time, 
         trip_client_start_location, 
@@ -100,7 +100,7 @@ export const getTripHistoryByDriverId = async (
         clients.client_p_i_b AS client,
         tariffs.tariff_name AS tariff,
         payments.payment_amount AS amount,
-        trip_payment_type AS payment_type,
+        payments.payment_type AS payment_type,
         trip_start_time AS start_time,
         trip_end_time AS end_time,
         trip_client_start_location AS start_location,
@@ -111,6 +111,7 @@ export const getTripHistoryByDriverId = async (
       JOIN payments ON triphistory.trip_payment_id = payments.payment_id
       WHERE trip_driver_id = $1
       ORDER BY trip_id DESC;
+
       `,
       [driverId]
     );

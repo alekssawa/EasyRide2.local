@@ -97,18 +97,19 @@ export const getOrdersByClientId = async (
   try {
     const result = await pool.query(
       `SELECT 
-         order_id,
-         order_payment_id,
-         order_driver_id,
-         order_tariff_id,
-         order_order_time,
-         order_client_start_location,
-         order_client_destination,
-         order_payment_type,
-         order_order_status,
-         order_distance
-       FROM orders
-       WHERE order_client_id = $1`,
+         o.order_id,
+         o.order_payment_id,
+         o.order_driver_id,
+         o.order_tariff_id,
+         o.order_order_time,
+         o.order_client_start_location,
+         o.order_client_destination,
+         p.payment_type,
+         o.order_order_status,
+         o.order_distance
+       FROM orders o
+       JOIN payments p ON o.order_payment_id = p.payment_id
+       WHERE o.order_client_id = $1`,
       [clientId]
     );
 
@@ -121,3 +122,4 @@ export const getOrdersByClientId = async (
     res.status(500).json({ error: err.message });
   }
 };
+

@@ -13,7 +13,7 @@ import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
 import markerCarImage from "../../assets/img/MarkerCar.png";
 
-import TripSummary from "../OrderMenu/TripSummary";
+// import TripSummary from "../OrderMenu/TripSummary";
 
 // const getBoroughColor = (borough: string) => {
 //   switch (borough) {
@@ -37,6 +37,13 @@ interface MapViewProps {
   selectedTariff: string | null;
   searchTriggered: boolean; // ✅ добавлено
   setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>;
+
+  setDriverToFromDistance: React.Dispatch<React.SetStateAction<number>>;
+  setDriverToFromTime: React.Dispatch<React.SetStateAction<number>>;
+  setFromToToDistance: React.Dispatch<React.SetStateAction<number>>;
+  setFromToToTime: React.Dispatch<React.SetStateAction<number>>;
+  setTotalDistance: React.Dispatch<React.SetStateAction<number>>;
+  setTotalTime: React.Dispatch<React.SetStateAction<number>>;
 }
 
 interface DriverWithCoordinates {
@@ -192,6 +199,13 @@ const MapView: React.FC<MapViewProps> = ({
   selectedTariff,
   searchTriggered,
   setSearchTriggered,
+
+  setDriverToFromDistance,
+  setDriverToFromTime,
+  setFromToToDistance,
+  setFromToToTime,
+  setTotalDistance,
+  setTotalTime,
 }) => {
   const [driversWithCoords, setDriversWithCoords] = useState<
     DriverWithCoordinates[]
@@ -200,12 +214,7 @@ const MapView: React.FC<MapViewProps> = ({
   const [, /*boundaries*/ setBoundaries] = useState<Boundary[]>([]);
   const [roadsData, setRoadsData] = useState<Record<string, Road[]>>({});
 
-  const [driverToFromDistance, setDriverToFromDistance] = useState(0);
-  const [driverToFromTime, setDriverToFromTime] = useState(0);
-  const [fromToToDistance, setFromToToDistance] = useState(0);
-  const [fromToToTime, setFromToToTime] = useState(0);
-  const [totalDistance, setTotalDistance] = useState(0);
-  const [totalTime, setTotalTime] = useState(0);
+
 
   const mapRef = useRef<L.Map | null>(null); // Используем useRef вместо useState
   const driverToFromRef = useRef<L.Routing.Control | null>(null);
@@ -402,14 +411,18 @@ const MapView: React.FC<MapViewProps> = ({
 
       setSearchTriggered(false);
     }
-  }, [
-    searchTriggered,
-    fromSuggestions,
-    toSuggestions,
-    driversWithCoords,
-    selectedTariff,
-    setSearchTriggered,
-  ]);
+  }, [searchTriggered, 
+    fromSuggestions, 
+    toSuggestions, 
+    driversWithCoords, 
+    selectedTariff, 
+    setSearchTriggered, 
+    setDriverToFromDistance, 
+    setDriverToFromTime, 
+    setFromToToDistance, 
+    setFromToToTime, 
+    setTotalDistance, 
+    setTotalTime]);
 
   if (error) {
     return <div className="p-4 text-red-600">{error}</div>;
@@ -473,14 +486,14 @@ const MapView: React.FC<MapViewProps> = ({
           </Marker>
         ))}
       </MapContainer>
-      <TripSummary
+      {/* <TripSummary
         driverToFromDistance={driverToFromDistance}
         driverToFromTime={driverToFromTime}
         fromToToDistance={fromToToDistance}
         fromToToTime={fromToToTime}
         totalDistance={totalDistance}
         totalTime={totalTime}
-      />
+      /> */}
     </div>
   );
 };
