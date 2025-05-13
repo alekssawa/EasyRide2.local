@@ -34,9 +34,12 @@ interface MapViewProps {
   fromSuggestions: { lat: number; lon: number; display_name: string }[]; // Add fromSuggestions
   toSuggestions: { lat: number; lon: number; display_name: string }[]; // Add toSuggestions
   zoom: number;
+  
   selectedTariff: string | null;
   searchTriggered: boolean; // ✅ добавлено
+  setSelectedDriverId: React.Dispatch<React.SetStateAction<string | undefined>>;
   setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsRouteFound: React.Dispatch<React.SetStateAction<boolean>>;
 
   setDriverToFromDistance: React.Dispatch<React.SetStateAction<number>>;
   setDriverToFromTime: React.Dispatch<React.SetStateAction<number>>;
@@ -189,6 +192,7 @@ const findNearestDriver = (
     }
   }
 
+
   return nearestDriver;
 };
 
@@ -198,7 +202,9 @@ const MapView: React.FC<MapViewProps> = ({
   zoom,
   selectedTariff,
   searchTriggered,
+  setSelectedDriverId,
   setSearchTriggered,
+  setIsRouteFound,
 
   setDriverToFromDistance,
   setDriverToFromTime,
@@ -319,6 +325,8 @@ const MapView: React.FC<MapViewProps> = ({
 
       const map = mapRef.current;
 
+      setSelectedDriverId(nearestDriver.id)
+
       const route1Waypoints = [
         L.latLng(nearestDriver.coordinates[1], nearestDriver.coordinates[0]),
         L.latLng(from[0], from[1]),
@@ -410,6 +418,7 @@ const MapView: React.FC<MapViewProps> = ({
       map.fitBounds(bounds, { padding: [110, 110] });
 
       setSearchTriggered(false);
+      setIsRouteFound(true);
     }
   }, [searchTriggered, 
     fromSuggestions, 
@@ -417,6 +426,7 @@ const MapView: React.FC<MapViewProps> = ({
     driversWithCoords, 
     selectedTariff, 
     setSearchTriggered, 
+    setIsRouteFound,
     setDriverToFromDistance, 
     setDriverToFromTime, 
     setFromToToDistance, 

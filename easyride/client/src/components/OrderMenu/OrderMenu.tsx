@@ -1,7 +1,11 @@
 import React, { useState, useRef } from "react";
 
+import { useAuth } from "../../context/authContext"; // Импортируем useAuth
+
+import { ToastContainer, toast } from "react-toastify";
+
 // Типы для представления данных
-type View = "main" | "time" | "payment" | "class";
+type View = "main" | "time" | "paymentType" | "class";
 
 interface NominatimResult {
   display_name: string;
@@ -14,7 +18,7 @@ type FormData = {
   to: string;
   comment?: string;
   time?: string;
-  payment?: string;
+  paymentType?: string;
   carClass?: string;
 };
 
@@ -27,8 +31,13 @@ interface Coordinates {
 type TaxiOrderProps = {
   setFromCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
   setToCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
+  setSelectedPaymentType: (paymentType: string) => void;
   setSelectedTariff: (tariff: string) => void;
   setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>; // <-- добавлено
+  selectedDriverId: string | undefined;
+  selectedPaymentType: string;
+  selectedTariff: string | null;
+  IsRouteFound: boolean;
 
   driverToFromDistance: number;
   driverToFromTime: number;
@@ -38,31 +47,93 @@ type TaxiOrderProps = {
   totalTime: number;
 };
 
-export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSelectedTariff, setSearchTriggered, driverToFromDistance,
+export default function TaxiOrder({
+  setFromCoordinates,
+  setToCoordinates,
+  setSelectedTariff,
+  setSearchTriggered,
+  selectedDriverId,
+  selectedPaymentType,
+  selectedTariff,
+  IsRouteFound,
+  driverToFromDistance,
   driverToFromTime,
   fromToToDistance,
   fromToToTime,
   totalDistance,
-  totalTime,}: TaxiOrderProps) {
+  // searchTriggered,
+  totalTime,
+}: TaxiOrderProps) {
   const [isConfirmed, setIsConfirmed] = useState(false);
-    
-  const handleConfirm = () => {
-      setIsConfirmed(true);
-  };
+
   const [view, setView] = useState<View>("main");
   const [formData, setFormData] = useState<FormData>({
     from: "",
     comment: "",
     to: "",
     time: "На зараз",
-    payment: "Cash",
+    paymentType: "Cash",
     carClass: "Standard",
   });
+  const { user } = useAuth();
+
   const [fromSuggestions, setFromSuggestions] = useState<NominatimResult[]>([]);
   const [toSuggestions, setToSuggestions] = useState<NominatimResult[]>([]);
 
   const fromTypingTimeout = useRef<NodeJS.Timeout | null>(null);
   const toTypingTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const handleConfirm = async () => {
+    if (user.authenticated) {
+      console.log([
+        user.userId,
+        selectedDriverId,
+        selectedTariff,
+        new Date().toISOString(),
+        fromSuggestions,
+        toSuggestions,
+        "In progress",
+        totalDistance,
+        selectedPaymentType
+      ]);
+
+      // try {
+      //   const response = await fetch(`http://localhost:5000/api/order/create`, {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       client_id: user.userId, // предположим, что user содержит id клиента
+      //       driver_id: selectedDriverId,
+      //       tariff_id: selectedTariffId,
+      //       order_time: new Date().toISOString(),
+      //       start_location: startLocation,
+      //       destination: destination,
+      //       order_status: "In progress",
+      //       distance: calculatedDistance,
+      //       amount: calculatedAmount,
+      //       payment_type: selectedPaymentType,
+      //     }),
+      //   });
+
+      //   const data = await response.json();
+
+      //   if (!response.ok) {
+      //     throw new Error(data.message || "Помилка при створенні замовлення");
+      //   }
+
+      //   toast.success("Замовлення прийнято");
+      //   setIsConfirmed(true);
+      // } catch (error: any) {
+      //   toast.error(error.message || "Щось пішло не так");
+      // }
+      toast.success("Замовлення прийнято");
+      setIsConfirmed(true);
+    } else {
+      toast.error("Ви не авторизовані!");
+    }
+  };
 
   const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -71,10 +142,15 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    const fetchSuggestions = async (input: string, setter: React.Dispatch<React.SetStateAction<NominatimResult[]>>) => {
+    const fetchSuggestions = async (
+      input: string,
+      setter: React.Dispatch<React.SetStateAction<NominatimResult[]>>
+    ) => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(input + ", Odessa, Ukraine")}`
+          `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(
+            input + ", Odessa, Ukraine"
+          )}`
         );
         const data = (await res.json()) as NominatimResult[];
         setter(data);
@@ -87,11 +163,13 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
       if (fromTypingTimeout.current) clearTimeout(fromTypingTimeout.current);
       fromTypingTimeout.current = setTimeout(() => {
         fetchSuggestions(value, setFromSuggestions);
+        console.log(toSuggestions, fromSuggestions);
       }, 500);
     } else if (field === "to" && value.length > 2) {
       if (toTypingTimeout.current) clearTimeout(toTypingTimeout.current);
       toTypingTimeout.current = setTimeout(() => {
         fetchSuggestions(value, setToSuggestions);
+        console.log(toSuggestions, fromSuggestions);
       }, 500);
     } else {
       if (field === "from") setFromSuggestions([]);
@@ -122,6 +200,14 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
     if (field === "to") setToSuggestions([]);
   };
 
+  const handlePaymentTypeChange = (paymentType: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      paymentType: paymentType,
+    }));
+    setSelectedTariff(paymentType); // уведомим родителя
+  };
+
   const handleTariffChange = (tariff: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -132,7 +218,7 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
 
   const handleSubmit = () => {
     if (formData.from && formData.to) {
-      console.log("setSearchTriggered TRUE")
+      console.log("setSearchTriggered TRUE");
       setSearchTriggered(true);
     } else {
       alert("Будь ласка, заповніть поля 'Звідки' та 'Куди'");
@@ -208,11 +294,11 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
       </div>
 
       <div
-        onClick={() => setView("payment")}
+        onClick={() => setView("paymentType")}
         className="flex justify-between items-center p-3 border border-gray-300 rounded-md cursor-pointer"
       >
         <span>Спосіб оплати:</span>
-        <span className="font-semibold">{formData.payment}</span>
+        <span className="font-semibold">{formData.paymentType}</span>
       </div>
 
       <div
@@ -237,40 +323,38 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
       >
         Знайти водія
       </button>
-
-      <div className="absolute top-1/2 transform -translate-y-1/2 right-8 bg-white p-4 rounded-xl shadow-lg z-50">
-      <div className="mb-4">
-        <h3 className="text-xl font-semibold">Маршрут:</h3>
-        <p>
-          Driver → From:{" "}
-          {(driverToFromDistance / 1000).toFixed(2)} км,{" "}
-          {(driverToFromTime / 60).toFixed(1)} мин
-        </p>
-        <p>
-          From → To:{" "}
-          {(fromToToDistance / 1000).toFixed(2)} км,{" "}
-          {(fromToToTime / 60).toFixed(1)} мин
-        </p>
-        <p>
-          Total:{" "}
-          {(totalDistance / 1000).toFixed(2)} км,{" "}
-          {(totalTime / 60).toFixed(1)} мин
-        </p>
-      </div>
       {/* TODO: Сделать реализацию добавление заказа */}
-      <button
-        onClick={handleConfirm}
-        disabled={isConfirmed} // Блокируем кнопку после подтверждения
-        className={`${
-          isConfirmed ? "bg-gray-500 cursor-not-allowed" : "bg-green-500"
-        } text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none`}
-      >
-        {isConfirmed ? "Поездка подтверждена" : "Подтвердить поездку"}
-      </button>
-    </div>
-    </div>
 
-    
+      {IsRouteFound && (
+        <div className="absolute top-1/2 transform -translate-y-1/2 right-8 bg-white p-4 rounded-xl shadow-lg z-50">
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold">Маршрут:</h3>
+            <p>
+              Driver → From: {(driverToFromDistance / 1000).toFixed(2)} км,{" "}
+              {(driverToFromTime / 60).toFixed(1)} мин
+            </p>
+            <p>
+              From → To: {(fromToToDistance / 1000).toFixed(2)} км,{" "}
+              {(fromToToTime / 60).toFixed(1)} мин
+            </p>
+            <p>
+              Total: {(totalDistance / 1000).toFixed(2)} км,{" "}
+              {(totalTime / 60).toFixed(1)} мин
+            </p>
+          </div>
+
+          <button
+            onClick={handleConfirm}
+            disabled={isConfirmed}
+            className={`${
+              isConfirmed ? "bg-gray-500 cursor-not-allowed" : "bg-green-500"
+            } text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none`}
+          >
+            Підтвердити подорож
+          </button>
+        </div>
+      )}
+    </div>
   );
 
   const renderSelectView = (type: View, options: string[]) => (
@@ -288,6 +372,9 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
           onClick={() => {
             if (type === "class") {
               handleTariffChange(option);
+            }
+            if (type === "paymentType") {
+              handlePaymentTypeChange(option);
             } else {
               setFormData((prev) => ({
                 ...prev,
@@ -315,11 +402,22 @@ export default function TaxiOrder({ setFromCoordinates, setToCoordinates, setSel
             "Через 30 хвилин",
             "Через 1 годину",
           ])}
-        {view === "payment" &&
-          renderSelectView("payment", ["Готівка", "Карта"])}
+        {view === "paymentType" &&
+          renderSelectView("paymentType", ["Готівка", "Карта"])}
         {view === "class" &&
-          renderSelectView("class", ["Standard", "Comfort", "Business", "Minibus"])}
+          renderSelectView("class", [
+            "Standard",
+            "Comfort",
+            "Business",
+            "Minibus",
+          ])}
       </div>
+      <ToastContainer
+        position="bottom-center"
+        pauseOnHover={false}
+        limit={2}
+        autoClose={1500}
+      />
     </div>
   );
 }

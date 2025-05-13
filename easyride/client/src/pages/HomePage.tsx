@@ -12,48 +12,58 @@ interface Coordinates {
 const HomePage = () => {
   const [fromCoordinates, setFromCoordinates] = useState<Coordinates[]>([]);
   const [toCoordinates, setToCoordinates] = useState<Coordinates[]>([]);
+  const [selectedDriverId, setSelectedDriverId] = useState<string | undefined>(undefined);
   const [selectedTariff, setSelectedTariff] = useState<string>("Standard");
+  const [selectedPaymentType, setSelectedPaymentType] = useState<string>("Cash");
   const [searchTriggered, setSearchTriggered] = useState(false);
+  const [IsRouteFound, setIsRouteFound] = useState(false);
 
-    const [driverToFromDistance, setDriverToFromDistance] = useState(0);
-    const [driverToFromTime, setDriverToFromTime] = useState(0);
-    const [fromToToDistance, setFromToToDistance] = useState(0);
-    const [fromToToTime, setFromToToTime] = useState(0);
-    const [totalDistance, setTotalDistance] = useState(0);
-    const [totalTime, setTotalTime] = useState(0);
-
+  const [driverToFromDistance, setDriverToFromDistance] = useState(0);
+  const [driverToFromTime, setDriverToFromTime] = useState(0);
+  const [fromToToDistance, setFromToToDistance] = useState(0);
+  const [fromToToTime, setFromToToTime] = useState(0);
+  const [totalDistance, setTotalDistance] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
 
   return (
     <div className="relative w-full h-screen">
       <div className="absolute inset-0 z-0">
-      <MapView
+        <MapView
           fromSuggestions={fromCoordinates}
           toSuggestions={toCoordinates}
           zoom={12}
+          setSelectedDriverId={setSelectedDriverId}
           selectedTariff={selectedTariff}
           searchTriggered={searchTriggered}
-          setSearchTriggered={setSearchTriggered} // 🔧 Добавить!
-          setDriverToFromDistance={setDriverToFromDistance} 
-          setDriverToFromTime={setDriverToFromTime} 
-          setFromToToDistance={setFromToToDistance} 
-          setFromToToTime={setFromToToTime} 
-          setTotalDistance={setTotalDistance} 
-          setTotalTime={setTotalTime}      />
+          setIsRouteFound={setIsRouteFound}
+          setSearchTriggered={setSearchTriggered}
+          setDriverToFromDistance={setDriverToFromDistance}
+          setDriverToFromTime={setDriverToFromTime}
+          setFromToToDistance={setFromToToDistance}
+          setFromToToTime={setFromToToTime}
+          setTotalDistance={setTotalDistance}
+          setTotalTime={setTotalTime}
+        />
       </div>
       <div className="absolute inset-0 z-10 flex justify-start items-center p-8 pointer-events-none">
         <div className="pointer-events-auto">
           <TaxiOrder
+            selectedDriverId={selectedDriverId}
+            selectedPaymentType={selectedPaymentType}
+            selectedTariff={selectedTariff}
             setFromCoordinates={setFromCoordinates}
             setToCoordinates={setToCoordinates}
+            setSelectedPaymentType={setSelectedPaymentType}
             setSelectedTariff={setSelectedTariff}
-            setSearchTriggered={setSearchTriggered} 
+            setSearchTriggered={setSearchTriggered}
+            IsRouteFound={IsRouteFound}
             driverToFromDistance={driverToFromDistance}
             driverToFromTime={driverToFromTime}
             fromToToDistance={fromToToDistance}
             fromToToTime={fromToToTime}
             totalDistance={totalDistance}
             totalTime={totalTime}
-            />
+          />
         </div>
       </div>
     </div>
