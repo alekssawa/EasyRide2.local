@@ -26,7 +26,7 @@ interface Driver {
 
 const ProfileSkeleton = () => {
   const { user } = useAuth();
-  console.log(user.role);
+  // console.log(user.role);
   return (
     <div
       className={

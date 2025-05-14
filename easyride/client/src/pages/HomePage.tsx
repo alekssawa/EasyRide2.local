@@ -13,7 +13,7 @@ const HomePage = () => {
   const [fromCoordinates, setFromCoordinates] = useState<Coordinates[]>([]);
   const [toCoordinates, setToCoordinates] = useState<Coordinates[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string | undefined>(undefined);
-  const [selectedTariff, setSelectedTariff] = useState<string>("Standard");
+  const [selectedTariff, setSelectedTariff] = useState<number>(2);
   const [selectedPaymentType, setSelectedPaymentType] = useState<string>("Cash");
   const [searchTriggered, setSearchTriggered] = useState(false);
   const [IsRouteFound, setIsRouteFound] = useState(false);

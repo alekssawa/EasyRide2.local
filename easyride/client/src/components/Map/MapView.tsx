@@ -35,7 +35,7 @@ interface MapViewProps {
   toSuggestions: { lat: number; lon: number; display_name: string }[]; // Add toSuggestions
   zoom: number;
   
-  selectedTariff: string | null;
+  selectedTariff: number | null;
   searchTriggered: boolean; // ✅ добавлено
   setSelectedDriverId: React.Dispatch<React.SetStateAction<string | undefined>>;
   setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>;
@@ -52,6 +52,7 @@ interface MapViewProps {
 interface DriverWithCoordinates {
   id: string;
   tariff: string;
+  tariff_id: string;
   coordinates: [number, number];
   borough: string;
 }
@@ -170,7 +171,7 @@ const placeDriverOnRoads = (roads: Road[]): [number, number] => {
 const findNearestDriver = (
   from: [number, number],
   drivers: DriverWithCoordinates[],
-  selectedTariff: string | null
+  selectedTariff: number | null
 ): DriverWithCoordinates | null => {
   let minDistance = Infinity;
   let nearestDriver: DriverWithCoordinates | null = null;
@@ -178,7 +179,7 @@ const findNearestDriver = (
   console.log(from, drivers, selectedTariff);
 
   const filteredDrivers = selectedTariff
-    ? drivers.filter((driver) => driver.tariff === selectedTariff)
+    ? drivers.filter((driver) => driver.tariff_id === String(selectedTariff))
     : drivers;
 
   for (const driver of filteredDrivers) {
@@ -264,6 +265,8 @@ const MapView: React.FC<MapViewProps> = ({
           const borough = boroughs[boroughIndex];
           const roads = roadsData[borough];
 
+          // console.log(driver)
+
           if (!roads || roads.length === 0) {
             console.warn(`Нет дорог для района ${borough}`);
             continue;
@@ -273,6 +276,7 @@ const MapView: React.FC<MapViewProps> = ({
           allDriversWithCoords.push({
             id: driver.id,
             tariff: driver.tariff,
+            tariff_id: driver.tariff_id,
             coordinates: point,
             borough: borough,
           });
@@ -427,6 +431,7 @@ const MapView: React.FC<MapViewProps> = ({
     selectedTariff, 
     setSearchTriggered, 
     setIsRouteFound,
+    setSelectedDriverId,
     setDriverToFromDistance, 
     setDriverToFromTime, 
     setFromToToDistance, 
@@ -491,7 +496,7 @@ const MapView: React.FC<MapViewProps> = ({
             icon={getCarIcon()} // Используем иконку водителя
           >
             <Popup>
-              {`ID: ${driver.id}, Тариф: ${driver.tariff}, Район: ${driver.borough}`}
+              {`ID: ${driver.id},Тариф ID: ${driver.tariff_id}, Тариф: ${driver.tariff}, Район: ${driver.borough}`}
             </Popup>
           </Marker>
         ))}

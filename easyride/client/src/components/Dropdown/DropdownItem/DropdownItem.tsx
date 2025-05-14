@@ -4,30 +4,32 @@ import "./DropdownItem.css";
 interface DropdownItemProps {
   children: ReactNode;
   onClick?: MouseEventHandler<HTMLDivElement>;
+  disabled?: boolean;
 }
 
-const DropdownItem = ({ children, onClick }: DropdownItemProps) => {
+const DropdownItem = ({ children, onClick, disabled = false }: DropdownItemProps) => {
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (disabled) return;
     if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault(); // Чтобы пробел не прокручивал страницу
-      onClick?.(
-        // создаём фиктивное событие мыши на основе клавиатурного
-        {
-          ...e,
-          currentTarget: e.currentTarget,
-          target: e.target,
-        } as unknown as React.MouseEvent<HTMLDivElement>
-      );
+      e.preventDefault();
+      onClick?.({
+        ...e,
+        currentTarget: e.currentTarget,
+        target: e.target,
+      } as unknown as React.MouseEvent<HTMLDivElement>);
     }
   };
 
   return (
     <div
-      className="dropdown-item flex justify-center"
-      onClick={onClick}
+      className={`dropdown-item flex justify-center ${
+        disabled ? "text-gray-400 cursor-not-allowed" : "cursor-pointer hover:bg-gray-100"
+      }`}
+      onClick={disabled ? undefined : onClick}
       role="button"
-      tabIndex={0}
+      tabIndex={disabled ? -1 : 0}
       onKeyDown={handleKeyDown}
+      aria-disabled={disabled}
     >
       {children}
     </div>

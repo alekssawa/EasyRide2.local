@@ -108,7 +108,7 @@ const Header = () => {
                     <DropdownItem onClick={() => navigate("/profile")}>Профіль</DropdownItem>
                     <DropdownItem onClick={() => navigate("/my-order")}>Моє замовлення</DropdownItem>
                     <DropdownItem onClick={() => navigate("/my-order-history")}>Історія</DropdownItem>
-                    <DropdownItem onClick={() => navigate("/settings")}>Налаштування</DropdownItem>
+                    <DropdownItem disabled onClick={() => navigate("/settings")}>Налаштування</DropdownItem>
                     <DropdownItem onClick={handleLogout}>Вийти</DropdownItem>
                   </>
                 }

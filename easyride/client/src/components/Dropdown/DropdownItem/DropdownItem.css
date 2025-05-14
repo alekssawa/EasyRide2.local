@@ -9,3 +9,8 @@
 .dropdown-item:hover {
   background-color: #5e5e5e;
 }
+
+.dropdown-item[aria-disabled="true"] {
+  color: #9ca3af; /* text-gray-400 */
+  cursor: not-allowed;
+}

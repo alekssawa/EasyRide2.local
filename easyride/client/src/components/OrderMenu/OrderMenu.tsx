@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, /*useEffect*/ } from "react";
 
 import { useAuth } from "../../context/authContext"; // Импортируем useAuth
 
@@ -8,6 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 type View = "main" | "time" | "paymentType" | "class";
 
 interface NominatimResult {
+  osm_id: number;
   display_name: string;
   lat: string;
   lon: string;
@@ -32,11 +33,11 @@ type TaxiOrderProps = {
   setFromCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
   setToCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
   setSelectedPaymentType: (paymentType: string) => void;
-  setSelectedTariff: (tariff: string) => void;
+  setSelectedTariff: (tariff: number) => void;
   setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>; // <-- добавлено
   selectedDriverId: string | undefined;
   selectedPaymentType: string;
-  selectedTariff: string | null;
+  selectedTariff: number | null;
   IsRouteFound: boolean;
 
   driverToFromDistance: number;
@@ -51,6 +52,7 @@ export default function TaxiOrder({
   setFromCoordinates,
   setToCoordinates,
   setSelectedTariff,
+  setSelectedPaymentType,
   setSearchTriggered,
   selectedDriverId,
   selectedPaymentType,
@@ -80,61 +82,95 @@ export default function TaxiOrder({
   const [fromSuggestions, setFromSuggestions] = useState<NominatimResult[]>([]);
   const [toSuggestions, setToSuggestions] = useState<NominatimResult[]>([]);
 
+  const [selectedFrom, setSelectedFrom] = useState<NominatimResult | null>(
+    null
+  );
+  const [selectedTo, setSelectedTo] = useState<NominatimResult | null>(null);
+
   const fromTypingTimeout = useRef<NodeJS.Timeout | null>(null);
   const toTypingTimeout = useRef<NodeJS.Timeout | null>(null);
 
+  // useEffect(() => {
+  //   console.log("fromSuggestions changed:", selectedFrom);
+  // }, [selectedFrom]);
+
+  // useEffect(() => {
+  //   console.log("toSuggestions changed:", selectedTo);
+  // }, [selectedTo]);
+
   const handleConfirm = async () => {
-    if (user.authenticated) {
+    if (user.authenticated && selectedFrom !== null && selectedTo !== null) {
+      console.log([selectedFrom, selectedTo]);
+
+      const formatLocation = (location: NominatimResult) => {
+        const parts = location.display_name.split(",").map((s) => s.trim());
+        const houseNumber = parts[0] || "";
+        const street = parts[1] || "";
+        const osmId = location.osm_id;
+        return `${street}-${houseNumber}-${osmId}`;
+      };
+
+      const fromInfo = formatLocation(selectedFrom);
+      const toInfo = formatLocation(selectedTo);
+
+      console.log(user)
+
       console.log([
         user.userId,
         selectedDriverId,
         selectedTariff,
         new Date().toISOString(),
-        fromSuggestions,
-        toSuggestions,
-        "In progress",
-        totalDistance,
-        selectedPaymentType
+        fromInfo,
+        toInfo,
+        (totalDistance / 1000).toFixed(1),
+        selectedPaymentType,
       ]);
 
-      // try {
-      //   const response = await fetch(`http://localhost:5000/api/order/create`, {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       client_id: user.userId, // предположим, что user содержит id клиента
-      //       driver_id: selectedDriverId,
-      //       tariff_id: selectedTariffId,
-      //       order_time: new Date().toISOString(),
-      //       start_location: startLocation,
-      //       destination: destination,
-      //       order_status: "In progress",
-      //       distance: calculatedDistance,
-      //       amount: calculatedAmount,
-      //       payment_type: selectedPaymentType,
-      //     }),
-      //   });
+      try {
+        const response = await fetch(`http://localhost:5000/api/order/create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            client_id: user.userId, // предположим, что user содержит id клиента
+            driver_id: selectedDriverId,
+            tariff_id: selectedTariff,
+            order_time: new Date().toISOString(),
+            start_location: fromInfo,
+            destination: toInfo,
+            distance: (totalDistance / 1000).toFixed(1),
+            payment_type: selectedPaymentType,
+          }),
+        });
 
-      //   const data = await response.json();
+        const data = await response.json();
 
-      //   if (!response.ok) {
-      //     throw new Error(data.message || "Помилка при створенні замовлення");
-      //   }
+        if (!response.ok) {
+          throw new Error(data.message || "Помилка при створенні замовлення");
+        }
 
-      //   toast.success("Замовлення прийнято");
-      //   setIsConfirmed(true);
-      // } catch (error: any) {
-      //   toast.error(error.message || "Щось пішло не так");
-      // }
-      toast.success("Замовлення прийнято");
-      setIsConfirmed(true);
+        toast.success("Замовлення прийнято");
+        setIsConfirmed(true);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(error.message || "Щось пішло не так");
+        } else {
+          toast.error("Невідома помилка");
+        }
+
+        // toast.success("Замовлення прийнято");
+        // setIsConfirmed(true);
+      }
     } else {
       toast.error("Ви не авторизовані!");
     }
   };
 
+  {
+    /* TODO: Сделать локальный OSM сервер */
+  }
   const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     field: keyof FormData
@@ -148,7 +184,7 @@ export default function TaxiOrder({
     ) => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=uk&q=${encodeURIComponent(
             input + ", Odessa, Ukraine"
           )}`
         );
@@ -163,15 +199,16 @@ export default function TaxiOrder({
       if (fromTypingTimeout.current) clearTimeout(fromTypingTimeout.current);
       fromTypingTimeout.current = setTimeout(() => {
         fetchSuggestions(value, setFromSuggestions);
-        console.log(toSuggestions, fromSuggestions);
+        // console.log(fromSuggestions);
       }, 500);
     } else if (field === "to" && value.length > 2) {
       if (toTypingTimeout.current) clearTimeout(toTypingTimeout.current);
       toTypingTimeout.current = setTimeout(() => {
         fetchSuggestions(value, setToSuggestions);
-        console.log(toSuggestions, fromSuggestions);
+        // console.log(toSuggestions);
       }, 500);
     } else {
+      // console.log("TEST");
       if (field === "from") setFromSuggestions([]);
       if (field === "to") setToSuggestions([]);
     }
@@ -205,23 +242,29 @@ export default function TaxiOrder({
       ...prev,
       paymentType: paymentType,
     }));
-    setSelectedTariff(paymentType); // уведомим родителя
+    setSelectedPaymentType(paymentType); // уведомим родителя
   };
 
   const handleTariffChange = (tariff: string) => {
+    const tariffMap: Record<string, number> = {
+      Standard: 2,
+      Comfort: 3,
+      Minibus: 4,
+      Business: 5,
+    };
     setFormData((prev) => ({
       ...prev,
       carClass: tariff,
     }));
-    setSelectedTariff(tariff); // уведомим родителя
+    setSelectedTariff(tariffMap[tariff]); // уведомим родителя
   };
 
   const handleSubmit = () => {
     if (formData.from && formData.to) {
-      console.log("setSearchTriggered TRUE");
+      // console.log("setSearchTriggered TRUE");
       setSearchTriggered(true);
     } else {
-      alert("Будь ласка, заповніть поля 'Звідки' та 'Куди'");
+      toast.warn("Будь ласка, заповніть поля");
     }
   };
   const renderMainView = () => (
@@ -242,7 +285,10 @@ export default function TaxiOrder({
             {fromSuggestions.map((item, index) => (
               <li
                 key={index}
-                onClick={() => handleSelectAddress(item, "from")}
+                onClick={() => {
+                  handleSelectAddress(item, "from");
+                  setSelectedFrom(item);
+                }}
                 className="p-2 cursor-pointer hover:bg-gray-100"
               >
                 {item.display_name}
@@ -275,7 +321,10 @@ export default function TaxiOrder({
             {toSuggestions.map((item, index) => (
               <li
                 key={index}
-                onClick={() => handleSelectAddress(item, "to")}
+                onClick={() => {
+                  handleSelectAddress(item, "to");
+                  setSelectedTo(item);
+                }}
                 className="p-2 cursor-pointer hover:bg-gray-100"
               >
                 {item.display_name}
@@ -325,7 +374,7 @@ export default function TaxiOrder({
       </button>
       {/* TODO: Сделать реализацию добавление заказа */}
 
-      {IsRouteFound && (
+      {IsRouteFound && totalDistance !== 0 && (
         <div className="absolute top-1/2 transform -translate-y-1/2 right-8 bg-white p-4 rounded-xl shadow-lg z-50">
           <div className="mb-4">
             <h3 className="text-xl font-semibold">Маршрут:</h3>
@@ -338,7 +387,7 @@ export default function TaxiOrder({
               {(fromToToTime / 60).toFixed(1)} мин
             </p>
             <p>
-              Total: {(totalDistance / 1000).toFixed(2)} км,{" "}
+              Total: {(totalDistance / 1000).toFixed(1)} км,{" "}
               {(totalTime / 60).toFixed(1)} мин
             </p>
           </div>
@@ -402,14 +451,15 @@ export default function TaxiOrder({
             "Через 30 хвилин",
             "Через 1 годину",
           ])}
+        {/* FIXME: при смене типа оплаты водитель не находиться */}
         {view === "paymentType" &&
-          renderSelectView("paymentType", ["Готівка", "Карта"])}
+          renderSelectView("paymentType", ["Cash", "Card"])}
         {view === "class" &&
           renderSelectView("class", [
             "Standard",
             "Comfort",
-            "Business",
             "Minibus",
+            "Business",
           ])}
       </div>
       <ToastContainer

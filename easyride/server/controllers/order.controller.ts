@@ -164,7 +164,7 @@ export const getOrdersByDriverId = async (
         const distance = Number(order.distance);
 
         let amount = 0;
-        
+
         console.log(order);
 
         if (distance < 2) {
@@ -201,11 +201,14 @@ export const getOrdersByDriverId = async (
   }
 };
 
-export const getFreeDrivers = async (req: Request, res: Response): Promise<void> => {
+export const getFreeDrivers = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const result = await pool.query(
       `
-      SELECT d.driver_id AS id, t.tariff_name AS tariff
+      SELECT d.driver_id AS id, t.tariff_name AS tariff, t.tariff_id AS tariff_id
       FROM drivers d
       JOIN cars c ON d.driver_car_id = c.car_id
       JOIN tariffs t ON c.car_tariff_id = t.tariff_id
@@ -224,7 +227,10 @@ export const getFreeDrivers = async (req: Request, res: Response): Promise<void>
   }
 };
 
-export const createOrder = async (req: Request, res: Response): Promise<void> => {
+export const createOrder = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const {
     client_id,
     driver_id,
@@ -232,14 +238,41 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     order_time,
     start_location,
     destination,
-    order_status,
     distance,
-    amount, // сумма платежа
-    payment_type // используется только для создания payment
+    payment_type, // используется только для создания payment
   } = req.body;
 
   try {
-    // Шаг 1: Проверка, чтобы у клиента и водителя не было заказов со статусом "In progress"
+    const order_status = "In progress";
+    const tariffResult = await pool.query(
+      `
+      SELECT
+        tariff_cost_for_basic_2km,
+        tariff_min_order_cost,
+        tariff_cost_for_additional_km
+      FROM tariffs
+      WHERE tariff_id = $1
+      `,
+      [tariff_id]
+    );
+
+    let amount = 0;
+
+    // console.log(tariffResult.rows[0].tariff_cost_for_basic_2km)
+    // console.log(tariffResult.rows[0].tariff_cost_for_additional_km)
+    // console.log(distance)
+    // console.log(((distance - 2) * tariffResult.rows[0].tariff_cost_for_additional_km + parseFloat(tariffResult.rows[0].tariff_cost_for_basic_2km)))
+
+    if (distance < 2) {
+      amount = Math.round(tariffResult.rows[0].tariff_cost_for_basic_2km * 2);
+    } else {
+      const tempCost = distance - 2;
+      amount =
+        Math.round((tempCost * parseFloat(tariffResult.rows[0].tariff_cost_for_additional_km) + parseFloat(tariffResult.rows[0].tariff_cost_for_basic_2km)) * 2 * 10 ) / 10;
+    }
+
+    // console.log(amount);
+
     const clientOrderCheck = await pool.query(
       `
       SELECT 1 FROM orders
@@ -261,14 +294,16 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     // Если у клиента есть заказ со статусом 'In progress', возвращаем ошибку
     if (clientOrderCheck.rows.length > 0) {
       res.status(400).json({ message: "У клиента уже есть заказ в процессе." });
+      return;
     }
 
-    // Если у водителя есть заказ со статусом 'In progress', возвращаем ошибку
     if (driverOrderCheck.rows.length > 0) {
-      res.status(400).json({ message: "У водителя уже есть заказ в процессе." });
+      res
+        .status(400)
+        .json({ message: "У водителя уже есть заказ в процессе." });
+      return;
     }
 
-    // Шаг 2: Создаём запись в таблице payments
     const paymentResult = await pool.query(
       `
       INSERT INTO payments (payment_type, payment_amount, payment_date_time)
@@ -280,7 +315,6 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
 
     const payment_id = paymentResult.rows[0].payment_id;
 
-    // Шаг 3: Создаём заказ, используя созданный payment_id
     const orderResult = await pool.query(
       `
       INSERT INTO orders (
@@ -308,7 +342,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         start_location,
         destination,
         order_status,
-        distance
+        distance,
       ]
     );
 
@@ -322,9 +356,10 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-
-
-export const cancelOrder = async (req: Request, res: Response): Promise<void> => {
+export const cancelOrder = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { orderId } = req.params;
 
   try {
@@ -339,11 +374,11 @@ export const cancelOrder = async (req: Request, res: Response): Promise<void> =>
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ message: 'Order not found' });
+      res.status(404).json({ message: "Order not found" });
       return;
     }
 
-    res.status(200).json({ message: 'Order canceled successfully' });
+    res.status(200).json({ message: "Order canceled successfully" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -102,6 +102,7 @@ const MyOrder: React.FC = () => {
   if (loading) return <p>Loading...</p>;
   if (orders.length === 0) return <p className="text-2xl mt-[120px] flex justify-center justify-items-center">У вас немає подорожі</p>;
 
+  {/* FIXME: Сделать растояние и цену в отдельном боредере сверху */}
   return (
       <div className="orders-list">
         {orders.map((order) => {
