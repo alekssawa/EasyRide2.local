@@ -104,7 +104,8 @@ export const getTripHistoryByDriverId = async (
         trip_start_time AS start_time,
         trip_end_time AS end_time,
         trip_client_start_location AS start_location,
-        trip_client_destination AS destination
+        trip_client_destination AS destination,
+        trip_distance AS distance
       FROM triphistory
       JOIN tariffs ON triphistory.trip_tariff_id = tariffs.tariff_id
       JOIN clients ON triphistory.trip_client_id = clients.client_id
@@ -136,6 +137,7 @@ export const getTripHistoryByDriverId = async (
       end_time: trip.end_time || "Заглушка",
       start_location: formatAddress(trip.start_location),
       destination: formatAddress(trip.destination),
+      distance: trip.distance || 0.0,
     }));
 
     res.status(200).json(formattedTrips);

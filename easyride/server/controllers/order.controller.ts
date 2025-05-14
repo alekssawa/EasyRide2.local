@@ -165,7 +165,7 @@ export const getOrdersByDriverId = async (
 
         let amount = 0;
 
-        console.log(order);
+        // console.log(order);
 
         if (distance < 2) {
           amount = Math.round(basicCost * 2);
@@ -257,11 +257,6 @@ export const createOrder = async (
     );
 
     let amount = 0;
-
-    // console.log(tariffResult.rows[0].tariff_cost_for_basic_2km)
-    // console.log(tariffResult.rows[0].tariff_cost_for_additional_km)
-    // console.log(distance)
-    // console.log(((distance - 2) * tariffResult.rows[0].tariff_cost_for_additional_km + parseFloat(tariffResult.rows[0].tariff_cost_for_basic_2km)))
 
     if (distance < 2) {
       amount = Math.round(tariffResult.rows[0].tariff_cost_for_basic_2km * 2);
@@ -383,3 +378,100 @@ export const cancelOrder = async (
     res.status(500).json({ error: err.message });
   }
 };
+
+
+export const completeOrder = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { orderId } = req.params;
+
+  try {
+    // Начинаем транзакцию, чтобы все изменения прошли в одном блоке
+    await pool.query("BEGIN");
+
+    // 1. Обновляем статус заказа
+    const result = await pool.query(
+      `
+      UPDATE orders
+      SET order_order_status = 'Completed'
+      WHERE order_id = $1
+      RETURNING *;
+      `,
+      [orderId]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ message: "Order not found" });
+      return;
+    }
+
+    const order = result.rows[0];
+
+    // Проверка на наличие значений в необходимых полях
+    const {
+      order_client_id,          // Вместо trip_client_id
+      order_driver_id,          // Вместо trip_driver_id
+      order_tariff_id,          // Вместо trip_tariff_id
+      order_payment_id,         // Вместо trip_payment_id
+      order_order_time,         // Вместо trip_start_time
+      order_client_start_location, // Вместо trip_client_start_location
+      order_client_destination,    // Вместо trip_client_destination
+      order_distance,           // Вместо trip_distance
+    } = order;
+
+    if (
+      !order_client_id ||
+      !order_driver_id ||
+      !order_tariff_id ||
+      !order_payment_id ||
+      !order_order_time ||
+      !order_client_start_location ||
+      !order_client_destination ||
+      order_distance == null
+    ) {
+      res.status(400).json({
+        message: "Some required fields are missing or invalid in the order",
+      });
+      return;
+    }
+
+    // 2. Переносим данные из заказа в triphistory
+    await pool.query(
+      `
+      INSERT INTO triphistory (
+        trip_client_id,
+        trip_driver_id,
+        trip_tariff_id,
+        trip_payment_id,
+        trip_start_time,
+        trip_end_time,
+        trip_client_start_location,
+        trip_client_destination,
+        trip_distance
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+      `,
+      [
+        order_client_id,
+        order_driver_id,
+        order_tariff_id,
+        order_payment_id,
+        order_order_time,  // это начало поездки
+        new Date(),        // предполагаем, что текущая дата — это конец поездки
+        order_client_start_location,
+        order_client_destination,
+        order_distance,
+      ]
+    );
+
+    // 3. Завершаем транзакцию
+    await pool.query("COMMIT");
+
+    res.status(200).json({ message: "Order completed" });
+  } catch (err: any) {
+    // Если произошла ошибка, откатываем транзакцию
+    await pool.query("ROLLBACK");
+    res.status(500).json({ error: err.message });
+  }
+};
+

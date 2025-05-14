@@ -14,7 +14,7 @@ interface ModalProps {
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, authType, setAuthType, registerData, openModal }) => {
   if (!isOpen) return null; // Если окно закрыто, ничего не показываем
 
-  console.log("Received registerData in Modal:", registerData);
+  // console.log("Received registerData in Modal:", registerData);
 
   const handleLoginClick = () => {
     setAuthType("login");  // Устанавливаем тип авторизации

@@ -144,3 +144,8 @@ app.get("/api/db-users", async (req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log("Server started on", { PORT });
 });
+
+
+{/* TODO: Подключить облако для аватарок */}
+
+{/* TODO: Сделать Админ панель */}

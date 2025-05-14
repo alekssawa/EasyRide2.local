@@ -53,7 +53,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onClose }) => {
 
   useEffect(() => {
     if (loginSuccess && user.authenticated) {
-      console.log("Пользователь обновлён в контексте:", user);
+      // console.log("Пользователь обновлён в контексте:", user);
       onClose(); // Закрываем модалку только после установки пользователя
     }
   }, [loginSuccess, user, onClose]);
