@@ -1,8 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+
+declare module "leaflet" {
+  interface Marker {
+    slideTo(
+      latlng: L.LatLng,
+      options?: {
+        duration?: number;
+        keepAtCenter?: boolean;
+        easeLinearity?: number;
+      }
+    ): this;
+  }
+}
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-routing-machine";
+import "leaflet.marker.slideto";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 
 import markerCarImage from "../../assets/img/MarkerCar.png";
@@ -31,11 +45,23 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
   } | null>(null);
   const driverMarkerRef = useRef<L.Marker | null>(null);
 
-  // Локальный стейт для координат водителя, которые обновляются из WS
   const [driverPosition, setDriverPosition] = useState<Point>(driver);
 
+  // ✅ Только двигаем маркер, не пересоздаём
   useEffect(() => {
-    // WebSocket
+    if (!driverMarkerRef.current) return;
+
+    const marker = driverMarkerRef.current;
+    const newLatLng = L.latLng(driverPosition.lat, driverPosition.lng);
+
+    marker.slideTo(newLatLng, {
+      duration: 200,
+      keepAtCenter: false,
+    });
+  }, [driverPosition]);
+
+  // Подключаем WebSocket и обновляем только координаты
+  useEffect(() => {
     const ws = new WebSocket("ws://localhost:5000");
 
     ws.onopen = () => {
@@ -45,20 +71,19 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log(data);
-
         if (
           Array.isArray(data) &&
           data.length === 2 &&
-          typeof data[0] === "string" && // т.к. "170" — строка
+          typeof data[0] === "string" &&
           typeof data[1] === "object" &&
           data[1] !== null
         ) {
-          const incomingOrderID = parseInt(data[0], 10); // преобразуем в число
+          const incomingOrderID = parseInt(data[0], 10);
           const coords = data[1] as Point;
 
           if (incomingOrderID === orderID) {
             setDriverPosition({ lat: coords.lat, lng: coords.lng });
+            // console.log("New driver coords:", coords.lat, coords.lng);
           }
         }
       } catch (e) {
@@ -75,6 +100,7 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
     };
   }, [orderID]);
 
+  // 🚗 Создаём маршрут и маркеры — только один раз
   useEffect(() => {
     const driverIcon = L.icon({
       iconUrl: markerCarImage,
@@ -82,7 +108,7 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
       iconAnchor: [64 / 4, 80 / 4],
     });
 
-    const driverMarker = L.marker([driverPosition.lat, driverPosition.lng], {
+    const driverMarker = L.marker([driver.lat, driver.lng], {
       icon: driverIcon,
     }).addTo(map);
     const fromMarker = L.marker([from.lat, from.lng]).addTo(map);
@@ -92,7 +118,7 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
 
     const routingControl = L.Routing.control({
       waypoints: [
-        L.latLng(driverPosition.lat, driverPosition.lng),
+        L.latLng(driver.lat, driver.lng),
         L.latLng(from.lat, from.lng),
         L.latLng(to.lat, to.lng),
       ],
@@ -101,11 +127,12 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
       draggableWaypoints: false,
       fitSelectedRoutes: false,
       show: false,
+      alternatives: false,
       collapsible: false,
     } as unknown as L.Routing.RoutingControlOptions);
 
-    // 🔥 Добавляем routingControl на карту до route()
     routingControl.addTo(map);
+    map.removeControl(routingControl);
 
     routingControl.on("routesfound", (e: unknown) => {
       const event = e as { routes: ExtendedRoute[] };
@@ -125,7 +152,7 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
         opacity: 0.6,
       }).addTo(map);
       const line2 = L.polyline(part2, {
-        color: "#28a745",
+        color: "red",
         weight: 4,
         opacity: 1,
       }).addTo(map);
@@ -139,22 +166,24 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
       };
     });
 
-    routingControl.route(); // теперь можно вызывать
+    routingControl.route();
 
     return () => {
       map.removeLayer(driverMarker);
       map.removeLayer(fromMarker);
       map.removeLayer(toMarker);
+
       if (routingControlRef.current?.lines) {
         routingControlRef.current.lines.forEach((line) =>
           map.removeLayer(line)
         );
       }
+
       if (routingControlRef.current?.control) {
         map.removeControl(routingControlRef.current.control);
       }
     };
-  }, [driverPosition, from, to, map]);
+  }, [from, to, map]);
 
   return null;
 };
