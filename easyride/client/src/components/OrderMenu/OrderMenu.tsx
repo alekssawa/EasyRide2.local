@@ -152,7 +152,7 @@ export default function TaxiOrder({
             order_time: new Date().toISOString(),
             start_location: fromInfo,
             destination: toInfo,
-            distance: (totalDistance / 1000).toFixed(1),
+            distance: (fromToToDistance / 1000).toFixed(1),
             payment_type: selectedPaymentType,
           }),
         });
