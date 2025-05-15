@@ -7,6 +7,18 @@ import { ToastContainer, toast } from "react-toastify";
 // Типы для представления данных
 type View = "main" | "time" | "paymentType" | "class";
 
+import CarBusiness from "../../assets/img/CarBusiness.png";
+import CarComfort from "../../assets/img/CarComfort.png";
+import CarMinibus from "../../assets/img/CarMinibus.png";
+import CarStandard from "../../assets/img/CarStandard.png";
+
+const ImgMap: Record<string, string> = {
+      Standard: CarStandard,
+      Comfort: CarComfort,
+      Minibus: CarMinibus,
+      Business: CarBusiness,
+    };
+
 interface NominatimResult {
   osm_id: number;
   display_name: string;
@@ -358,12 +370,14 @@ export default function TaxiOrder({
         <span className="font-semibold">{formData.carClass}</span>
       </div>
 
+      {/* FIXME: исправить иконку */}
+
       <div className="flex justify-between items-center mt-4">
         <div className="flex items-center space-x-2">
-          <img src="/taxi-icon.png" alt="Taxi" className="w-8 h-8" />
+          <img src={ImgMap[formData.carClass as keyof typeof ImgMap] || CarStandard} alt="Taxi" className="w-9 h-9" />
           <div className="font-semibold">{formData.carClass}</div>
         </div>
-        <div className="font-bold text-lg">80₴</div>
+        <div className="font-bold text-lg pr-4">80₴</div>
       </div>
 
       <button
