@@ -67,7 +67,17 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-.leaflet-container {
+/* .leaflet-container {
+  height: 100vh !important;
+  width: 100% !important;
+  min-height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+} */
+
+.mapHomePage {
   height: 100vh !important;
   width: 100% !important;
   min-height: 100%;
@@ -76,3 +86,4 @@ button:focus-visible {
   left: 0;
   z-index: 0;
 }
+

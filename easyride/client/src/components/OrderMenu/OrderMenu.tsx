@@ -1,4 +1,4 @@
-import React, { useState, useRef, /*useEffect*/ } from "react";
+import React, { useState, useRef /*useEffect*/ } from "react";
 
 import { useAuth } from "../../context/authContext"; // Импортируем useAuth
 
@@ -13,11 +13,11 @@ import CarMinibus from "../../assets/img/CarMinibus.png";
 import CarStandard from "../../assets/img/CarStandard.png";
 
 const ImgMap: Record<string, string> = {
-      Standard: CarStandard,
-      Comfort: CarComfort,
-      Minibus: CarMinibus,
-      Business: CarBusiness,
-    };
+  Standard: CarStandard,
+  Comfort: CarComfort,
+  Minibus: CarMinibus,
+  Business: CarBusiness,
+};
 
 interface NominatimResult {
   osm_id: number;
@@ -41,13 +41,21 @@ interface Coordinates {
   display_name: string;
 }
 
+interface DriverGWithCoordinates {
+  id: string;
+  coordinates: [number, number];
+}
+
 type TaxiOrderProps = {
   setFromCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
   setToCoordinates: React.Dispatch<React.SetStateAction<Coordinates[]>>;
   setSelectedPaymentType: (paymentType: string) => void;
   setSelectedTariff: (tariff: number) => void;
   setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>; // <-- добавлено
-  selectedDriverId: string | undefined;
+  setTempOrderId: React.Dispatch<React.SetStateAction<number>>;
+  fromCoordinates: { lat: number; lon: number; display_name: string }[]; // Add fromSuggestions
+  toCoordinates: { lat: number; lon: number; display_name: string }[]; // Add toSuggestions
+  selectedDriverId: DriverGWithCoordinates | undefined;
   selectedPaymentType: string;
   selectedTariff: number | null;
   IsRouteFound: boolean;
@@ -66,6 +74,9 @@ export default function TaxiOrder({
   setSelectedTariff,
   setSelectedPaymentType,
   setSearchTriggered,
+  // setTempOrderId,
+  fromCoordinates,
+  toCoordinates,
   selectedDriverId,
   selectedPaymentType,
   selectedTariff,
@@ -125,7 +136,7 @@ export default function TaxiOrder({
       const fromInfo = formatLocation(selectedFrom);
       const toInfo = formatLocation(selectedTo);
 
-      console.log(user)
+      console.log(user);
 
       console.log([
         user.userId,
@@ -147,7 +158,7 @@ export default function TaxiOrder({
           credentials: "include",
           body: JSON.stringify({
             client_id: user.userId, // предположим, что user содержит id клиента
-            driver_id: selectedDriverId,
+            driver_id: selectedDriverId?.id,
             tariff_id: selectedTariff,
             order_time: new Date().toISOString(),
             start_location: fromInfo,
@@ -158,6 +169,65 @@ export default function TaxiOrder({
         });
 
         const data = await response.json();
+
+        const orderId = data.order.order_id;
+
+        console.log("Created order id:", data.order.order_id); // вот здесь вывод id в консоль
+
+        console.log([
+            orderId,
+            selectedDriverId?.id,
+            selectedDriverId?.coordinates[0],
+            selectedDriverId?.coordinates[1],
+            // fromSuggestions[0].lat,
+            // fromSuggestions[0].lon,
+            // toSuggestions[0].lat,
+            // toSuggestions[0].lon,
+          ]);
+
+          console.log([
+            fromCoordinates,
+            toCoordinates,
+            fromCoordinates[0].lat,
+            fromCoordinates[0].lon,
+            toCoordinates[0].lat,
+            toCoordinates[0].lon,
+
+          ]);
+
+        try {
+          
+
+          const body = {
+            order_id: orderId, // вот сюда передаём напрямую
+            driver_id: selectedDriverId?.id,
+            driver_latitude: selectedDriverId?.coordinates[1],
+            driver_longitude: selectedDriverId?.coordinates[0],
+            start_latitude: fromCoordinates[0].lat,
+            start_longitude: fromCoordinates[0].lon,
+            destination_latitude: toCoordinates[0].lat,
+            destination_longitude: toCoordinates[0].lon,
+          };
+
+          const response = await fetch(
+            "http://localhost:5000/api/order-locations",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+              credentials: "include",
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`Ошибка сервера: ${response.statusText}`);
+          }
+
+          const locationData = await response.json();
+          console.log("Данные успешно сохранены:", locationData);
+        } catch (error) {
+          console.error("Ошибка при сохранении данных:", error);
+        }
 
         if (!response.ok) {
           throw new Error(data.message || "Помилка при створенні замовлення");
@@ -374,7 +444,13 @@ export default function TaxiOrder({
 
       <div className="flex justify-between items-center mt-4">
         <div className="flex items-center space-x-2">
-          <img src={ImgMap[formData.carClass as keyof typeof ImgMap] || CarStandard} alt="Taxi" className="w-9 h-9" />
+          <img
+            src={
+              ImgMap[formData.carClass as keyof typeof ImgMap] || CarStandard
+            }
+            alt="Taxi"
+            className="w-9 h-9"
+          />
           <div className="font-semibold">{formData.carClass}</div>
         </div>
         <div className="font-bold text-lg pr-4">80₴</div>

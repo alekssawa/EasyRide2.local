@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from "react";
+
+import { useRoute } from "../../context/routeContext";
 import {
   MapContainer,
   TileLayer,
@@ -34,10 +36,11 @@ interface MapViewProps {
   fromSuggestions: { lat: number; lon: number; display_name: string }[]; // Add fromSuggestions
   toSuggestions: { lat: number; lon: number; display_name: string }[]; // Add toSuggestions
   zoom: number;
-  
+
   selectedTariff: number | null;
   searchTriggered: boolean; // ✅ добавлено
-  setSelectedDriverId: React.Dispatch<React.SetStateAction<string | undefined>>;
+  tempOrderId: number;
+  setSelectedDriverId: React.Dispatch<React.SetStateAction<DriverGWithCoordinates | undefined>>;
   setSearchTriggered: React.Dispatch<React.SetStateAction<boolean>>;
   setIsRouteFound: React.Dispatch<React.SetStateAction<boolean>>;
 
@@ -49,6 +52,12 @@ interface MapViewProps {
   setTotalTime: React.Dispatch<React.SetStateAction<number>>;
 }
 
+
+interface DriverGWithCoordinates {
+  id: string;
+  coordinates: [number, number];
+}
+
 interface DriverWithCoordinates {
   id: string;
   tariff: string;
@@ -56,6 +65,8 @@ interface DriverWithCoordinates {
   coordinates: [number, number];
   borough: string;
 }
+
+
 
 interface Geometry {
   type: string;
@@ -193,7 +204,6 @@ const findNearestDriver = (
     }
   }
 
-
   return nearestDriver;
 };
 
@@ -203,6 +213,7 @@ const MapView: React.FC<MapViewProps> = ({
   zoom,
   selectedTariff,
   searchTriggered,
+  tempOrderId,
   setSelectedDriverId,
   setSearchTriggered,
   setIsRouteFound,
@@ -214,14 +225,16 @@ const MapView: React.FC<MapViewProps> = ({
   setTotalDistance,
   setTotalTime,
 }) => {
+  const { orderId } = useRoute();
+
+  
+
   const [driversWithCoords, setDriversWithCoords] = useState<
     DriverWithCoordinates[]
   >([]);
   const [error, setError] = useState<string | null>(null);
   const [, /*boundaries*/ setBoundaries] = useState<Boundary[]>([]);
   const [roadsData, setRoadsData] = useState<Record<string, Road[]>>({});
-
-
 
   const mapRef = useRef<L.Map | null>(null); // Используем useRef вместо useState
   const driverToFromRef = useRef<L.Routing.Control | null>(null);
@@ -329,7 +342,28 @@ const MapView: React.FC<MapViewProps> = ({
 
       const map = mapRef.current;
 
-      setSelectedDriverId(nearestDriver.id)
+      setSelectedDriverId({
+        id: nearestDriver.id,
+        coordinates: nearestDriver.coordinates,
+      });
+
+      // setGNearestDriver({
+      //   id: nearestDriver.id,
+      //   coordinates: nearestDriver.coordinates,
+      // });
+      // setGFromSuggestions([
+      //   {
+      //     lat: fromSuggestions[0].lat,
+      //     lon: fromSuggestions[0].lon,
+      //   },
+      // ]);
+
+      // setGToSuggestions([
+      //   {
+      //     lat: toSuggestions[0].lat,
+      //     lon: toSuggestions[0].lon,
+      //   },
+      // ]);
 
       const route1Waypoints = [
         L.latLng(nearestDriver.coordinates[1], nearestDriver.coordinates[0]),
@@ -424,20 +458,27 @@ const MapView: React.FC<MapViewProps> = ({
       setSearchTriggered(false);
       setIsRouteFound(true);
     }
-  }, [searchTriggered, 
-    fromSuggestions, 
-    toSuggestions, 
-    driversWithCoords, 
-    selectedTariff, 
-    setSearchTriggered, 
+  }, [
+    searchTriggered,
+    fromSuggestions,
+    toSuggestions,
+    driversWithCoords,
+    selectedTariff,
+    setSearchTriggered,
     setIsRouteFound,
     setSelectedDriverId,
-    setDriverToFromDistance, 
-    setDriverToFromTime, 
-    setFromToToDistance, 
-    setFromToToTime, 
-    setTotalDistance, 
-    setTotalTime]);
+    setDriverToFromDistance,
+    setDriverToFromTime,
+    setFromToToDistance,
+    setFromToToTime,
+    setTotalDistance,
+    setTotalTime,
+    orderId,
+    tempOrderId,
+    // setGFromSuggestions,
+    // setGToSuggestions,
+    // setGNearestDriver,
+  ]);
 
   if (error) {
     return <div className="p-4 text-red-600">{error}</div>;
@@ -448,7 +489,7 @@ const MapView: React.FC<MapViewProps> = ({
       <MapContainer
         center={[46.4825, 30.7326]}
         zoom={zoom}
-        style={{ width: "100%", height: "100%" }}
+        className="mapHomePage"
         ref={mapRef} // Используем ref вместо whenCreated
         // whenReady={() => {
         //   // Дополнительные действия при готовности карты

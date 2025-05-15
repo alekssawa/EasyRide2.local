@@ -9,14 +9,21 @@ interface Coordinates {
   display_name: string;
 }
 
+interface DriverGWithCoordinates {
+  id: string;
+  coordinates: [number, number];
+}
+
 const HomePage = () => {
   const [fromCoordinates, setFromCoordinates] = useState<Coordinates[]>([]);
   const [toCoordinates, setToCoordinates] = useState<Coordinates[]>([]);
-  const [selectedDriverId, setSelectedDriverId] = useState<string | undefined>(undefined);
+  const [selectedDriverId, setSelectedDriverId] = useState<DriverGWithCoordinates | undefined>(undefined);
   const [selectedTariff, setSelectedTariff] = useState<number>(2);
   const [selectedPaymentType, setSelectedPaymentType] = useState<string>("Cash");
   const [searchTriggered, setSearchTriggered] = useState(false);
   const [IsRouteFound, setIsRouteFound] = useState(false);
+
+  const [tempOrderId, setTempOrderId] = useState<number>(0);
 
   const [driverToFromDistance, setDriverToFromDistance] = useState(0);
   const [driverToFromTime, setDriverToFromTime] = useState(0);
@@ -43,6 +50,7 @@ const HomePage = () => {
           setFromToToTime={setFromToToTime}
           setTotalDistance={setTotalDistance}
           setTotalTime={setTotalTime}
+          tempOrderId={tempOrderId}
         />
       </div>
       <div className="absolute inset-0 z-10 flex justify-start items-center p-8 pointer-events-none">
@@ -51,6 +59,8 @@ const HomePage = () => {
             selectedDriverId={selectedDriverId}
             selectedPaymentType={selectedPaymentType}
             selectedTariff={selectedTariff}
+            fromCoordinates={fromCoordinates}
+            toCoordinates={toCoordinates}
             setFromCoordinates={setFromCoordinates}
             setToCoordinates={setToCoordinates}
             setSelectedPaymentType={setSelectedPaymentType}
@@ -63,6 +73,7 @@ const HomePage = () => {
             fromToToTime={fromToToTime}
             totalDistance={totalDistance}
             totalTime={totalTime}
+            setTempOrderId={setTempOrderId}
           />
         </div>
       </div>

@@ -1,18 +1,25 @@
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import cors from "cors";
-import sessionMiddleware from "./lib/sessionConfig.ts"; // импортируем сессию
+import sessionMiddleware from "./lib/sessionConfig.ts";
+import pool from "./lib/db.js";
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
+import http from "http";
 
 
 import authRoutes from './routes/auth.routes.ts';
 import clientsRoutes from './routes/clients.routes.ts';
 import driversRoutes from './routes/drivers.routes.ts';
 import orderRoutes from './routes/order.routes.ts';
+import orderLocationRoutes from "./routes/orderLocation.routes.ts";
 import historyOrderRoutes from './routes/historyOrder.routes.ts';
 
-import pool from "./lib/db.js"; // ← если ESM
+import routeRoutes from './routes/route.routes.ts';
+
+import { wss } from "./ws/wsServer.ts";
+
+
 
 dotenv.config();
 
@@ -36,7 +43,18 @@ app.use('/api/auth', authRoutes);
 app.use('/api/client', clientsRoutes); 
 app.use('/api/driver', driversRoutes);
 app.use('/api/order', orderRoutes);
+app.use("/api/order-locations", orderLocationRoutes);
 app.use('/api/history', historyOrderRoutes);
+
+app.use("/api", routeRoutes);
+
+const server = http.createServer(app);
+
+server.on("upgrade", (request, socket, head) => {
+  wss.handleUpgrade(request, socket as any, head, (ws) => {
+    wss.emit("connection", ws, request);
+  });
+});
 
 passport.serializeUser(
   (user: Express.User, done: (err: any, id?: unknown) => void) => {
@@ -141,11 +159,23 @@ app.get("/api/db-users", async (req: Request, res: Response) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log("Server started on", { PORT });
+server.listen(PORT, () => {
+  console.log(`Server (HTTP + WebSocket) listening on port ${PORT}`);
 });
 
 
 {/* TODO: Подключить облако для аватарок */}
 
-{/* TODO: Сделать Админ панель */}
+{/* TODO: Сделать симуляцию в рл поездки */}
+
+{/* TODO: докер контейнер сервер OSM nominatim */}
+
+
+
+
+{/* TODO: Сделать логику оплаты stripe */}
+
+{/* TODO: Сделать Админ панель php yii */}
+
+{/* TODO: Сделать middleware для проверки на водителя */}
+

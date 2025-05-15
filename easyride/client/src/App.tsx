@@ -4,6 +4,7 @@ import "./styles/App.css";
 
 import Header from "./components/Header/Header";
 import { AuthProvider } from "./context/authContext";
+import { RouteProvider } from "./context/routeContext";
 
 // Импортируем страницы
 import Profile from "./pages/Profile"; // Страница профиля
@@ -13,27 +14,27 @@ import Settings from "./pages/Settings"; // Страница настроек
 import HomePage from "./pages/HomePage"; // Главная страница (новая)
 
 function App() {
-  
-
   return (
     <>
       <AuthProvider>
-        <Header />
-        <main className="">
-          {/* Маршруты для страниц */}
-          <Routes>
-            {/* Главная страница */}
-            <Route path="/" element={<HomePage />} />
-            {/* Страница с заказом */}
-            <Route path="/my-order" element={<MyOrder />} />
-            {/* История заказов */}
-            <Route path="/my-order-history" element={<MyOrderHistory />} />
-            {/* Страница настроек */}
-            <Route path="/settings" element={<Settings />} />
-            {/* Страница профиля */}
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
-        </main>
+        <RouteProvider>
+          <Header />
+          <main className="">
+            {/* Маршруты для страниц */}
+            <Routes>
+              {/* Главная страница */}
+              <Route path="/" element={<HomePage />} />
+              {/* Страница с заказом */}
+              <Route path="/my-order" element={<MyOrder />} />
+              {/* История заказов */}
+              <Route path="/my-order-history" element={<MyOrderHistory />} />
+              {/* Страница настроек */}
+              <Route path="/settings" element={<Settings />} />
+              {/* Страница профиля */}
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </main>
+        </RouteProvider>
       </AuthProvider>
     </>
   );
