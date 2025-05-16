@@ -44,10 +44,11 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
     lines: L.Polyline[];
   } | null>(null);
   const driverMarkerRef = useRef<L.Marker | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   const [driverPosition, setDriverPosition] = useState<Point>(driver);
 
-  // ✅ Только двигаем маркер, не пересоздаём
+  // Анимация движения маркера
   useEffect(() => {
     if (!driverMarkerRef.current) return;
 
@@ -60,62 +61,100 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
     });
   }, [driverPosition]);
 
-  // Подключаем WebSocket и обновляем только координаты
+  // WebSocket соединение
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:5000");
+    const connectWebSocket = () => {
+      const ws = new WebSocket("ws://localhost:5000");
+      wsRef.current = ws;
 
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-    };
+      ws.onopen = () => {
+        console.log("WebSocket connected");
+        // Можно отправить запрос на конкретный маршрут
+        ws.send(JSON.stringify({ type: "subscribe", orderID }));
+      };
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (
-          Array.isArray(data) &&
-          data.length === 2 &&
-          typeof data[0] === "string" &&
-          typeof data[1] === "object" &&
-          data[1] !== null
-        ) {
-          const incomingOrderID = parseInt(data[0], 10);
-          const coords = data[1] as Point;
-
-          if (incomingOrderID === orderID) {
-            setDriverPosition({ lat: coords.lat, lng: coords.lng });
-            // console.log("New driver coords:", coords.lat, coords.lng);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          // Проверяем структуру данных и соответствие orderID
+          if (Array.isArray(data) && data.length === 2) {
+            const [incomingOrderID, coords] = data;
+            
+            if (parseInt(incomingOrderID, 10) === orderID && 
+                typeof coords?.lat === 'number' && 
+                typeof coords?.lng === 'number') {
+              setDriverPosition(coords);
+            }
           }
+        } catch (e) {
+          console.error("Error parsing WS message", e);
         }
-      } catch (e) {
-        console.error("Error parsing WS message", e);
-      }
+      };
+
+      ws.onclose = () => {
+        console.log("WebSocket closed");
+        // Переподключение через 5 секунд
+        setTimeout(connectWebSocket, 5000);
+      };
+
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        ws.close();
+      };
     };
 
-    ws.onclose = () => {
-      console.log("WebSocket closed");
-    };
+    connectWebSocket();
 
     return () => {
-      ws.close();
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
   }, [orderID]);
 
-  // 🚗 Создаём маршрут и маркеры — только один раз
+  // Инициализация маршрута и маркеров
   useEffect(() => {
+    if (!map) return;
+
+    // Создаем иконку для машины
     const driverIcon = L.icon({
       iconUrl: markerCarImage,
       iconSize: [128 / 4, 160 / 4],
       iconAnchor: [64 / 4, 80 / 4],
     });
 
+    // Создаем маркеры
     const driverMarker = L.marker([driver.lat, driver.lng], {
       icon: driverIcon,
+      zIndexOffset: 1000,
     }).addTo(map);
-    const fromMarker = L.marker([from.lat, from.lng]).addTo(map);
-    const toMarker = L.marker([to.lat, to.lng]).addTo(map);
+    
+    const fromMarker = L.marker([from.lat, from.lng], {
+      icon: L.icon({
+        iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        shadowSize: [41, 41]
+      })
+    }).addTo(map);
+
+    const toMarker = L.marker([to.lat, to.lng], {
+      icon: L.icon({
+        iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        shadowSize: [41, 41]
+      })
+    }).addTo(map);
 
     driverMarkerRef.current = driverMarker;
 
+    // Настройка маршрутизации
     const routingControl = L.Routing.control({
       waypoints: [
         L.latLng(driver.lat, driver.lng),
@@ -127,38 +166,63 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
       draggableWaypoints: false,
       fitSelectedRoutes: false,
       show: false,
-      alternatives: false,
+      routeWhileDragging: false,
+      showAlternatives: false,
       collapsible: false,
+      lineOptions: {           // Добавляем это
+        styles: [{             // Явно указываем пустые стили
+          color: 'transparent',
+          opacity: 0,
+          weight: 0
+        }]
+      }
     } as unknown as L.Routing.RoutingControlOptions);
 
     routingControl.addTo(map);
-    map.removeControl(routingControl);
 
-    routingControl.on("routesfound", (e: unknown) => {
+    routingControl.on('routesfound', (e) => {
       const event = e as { routes: ExtendedRoute[] };
       const route = event.routes[0];
 
       if (!route || !route.coordinates || !route.waypointIndices) return;
 
       const { coordinates, waypointIndices } = route;
+      
+      // Удаляем старые линии, если они есть
+      if (routingControlRef.current?.lines) {
+        routingControlRef.current.lines.forEach(line => {
+          if (line && map.hasLayer(line)) {
+            map.removeLayer(line);
+          }
+        });
+      }
 
-      const indexFrom = waypointIndices[1];
-      const part1 = coordinates.slice(0, indexFrom + 1);
-      const part2 = coordinates.slice(indexFrom);
+      const part1 = coordinates.slice(waypointIndices[0], waypointIndices[1] + 1);
+      const part2 = coordinates.slice(waypointIndices[1], waypointIndices[2] + 1);
+
+      const svgRenderer = L.svg({ padding: 1 });
 
       const line1 = L.polyline(part1, {
-        color: "#007bff",
-        weight: 8,
-        opacity: 0.6,
+        color: "#007bff", 
+        weight: 6,
+        opacity: 0.8,
+        lineJoin: 'round',
+        lineCap: 'round',
+        renderer: svgRenderer
       }).addTo(map);
+      
       const line2 = L.polyline(part2, {
-        color: "red",
+        color: "green", 
         weight: 4,
         opacity: 1,
+        lineJoin: 'round',
+        lineCap: 'round',
+        renderer: svgRenderer
       }).addTo(map);
 
+      // Обновляем границы карты
       const bounds = L.latLngBounds([...part1, ...part2]);
-      map.fitBounds(bounds, { padding: [20, 20] });
+      map.fitBounds(bounds, { padding: [50, 50] });
 
       routingControlRef.current = {
         control: routingControl,
@@ -169,21 +233,17 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
     routingControl.route();
 
     return () => {
+      // Очистка при размонтировании
       map.removeLayer(driverMarker);
       map.removeLayer(fromMarker);
       map.removeLayer(toMarker);
 
-      if (routingControlRef.current?.lines) {
-        routingControlRef.current.lines.forEach((line) =>
-          map.removeLayer(line)
-        );
-      }
-
-      if (routingControlRef.current?.control) {
+      if (routingControlRef.current) {
+        routingControlRef.current.lines?.forEach(line => map.removeLayer(line));
         map.removeControl(routingControlRef.current.control);
       }
     };
-  }, [from, to, map]);
+  }, [map, from, to, driver]);
 
   return null;
 };

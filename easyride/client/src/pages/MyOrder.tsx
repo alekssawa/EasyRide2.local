@@ -49,7 +49,7 @@ const MyOrder: React.FC = () => {
   // const { orderId, setOrderId } = useRoute();
   const [location, setLocation] = useState<OrderLocation | null>(null);
   // console.log(orderId);
-  console.log(location);
+  // console.log(location);
 
   // console.log([GnearestDriver, fromGSuggestions, toGSuggestions]);
   const [orders, setOrders] = useState<Order[]>([]);

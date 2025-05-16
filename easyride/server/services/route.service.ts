@@ -1,5 +1,5 @@
 import axios from "axios";
-import { WSClient, wss } from "../ws/wsServer.ts";
+import { wss, getActiveRoute, setActiveRoute, startRouteForClient, stopRoute, WSClient } from "../ws/wsServer.ts";
 
 interface Point {
   lat: number;
@@ -59,7 +59,14 @@ export async function startRouteAnimation(
   driver: Point,
   from: Point,
   to: Point
-) {
+): Promise<void> {
+  // Проверяем, не запущен ли уже маршрут с этим order_id
+  const currentActiveRoute = getActiveRoute(order_id);
+  if (currentActiveRoute) {
+    console.log(`Route with order_id ${order_id} is already running`);
+    return;
+  }
+
   // Формируем координаты для OSRM (lng,lat)
   const coords = [driver, from, to]
     .map((c) => `${c.lng},${c.lat}`)
@@ -69,35 +76,50 @@ export async function startRouteAnimation(
 
   console.log("Starting route animation for order:", order_id);
 
-  const res = await axios.get(url);
-  if (!res.data.routes || res.data.routes.length === 0) {
-    throw new Error("Маршрут не найден");
+  try {
+    const res = await axios.get(url);
+    if (!res.data.routes || res.data.routes.length === 0) {
+      throw new Error("Route not found");
+    }
+
+    const routeCoords = res.data.routes[0].geometry.coordinates as [number, number][];
+    const routePoints = routeCoords.map(([lng, lat]) => ({ lat, lng }));
+
+    // Интерполируем точки маршрута с шагом 5 метров
+    const smoothRoutePoints = interpolateRoutePoints(routePoints, 5);
+
+    // Устанавливаем новый активный маршрут
+    setActiveRoute(order_id, smoothRoutePoints);
+
+    // Запускаем маршрут для всех подключенных клиентов
+    wss.clients.forEach(client => {
+      startRouteForClient(client as WSClient, order_id, smoothRoutePoints);
+    });
+  } catch (error) {
+    console.error("Error in route animation:", error);
+    throw new Error("Failed to start route animation");
   }
+}
 
-  const routeCoords = res.data.routes[0].geometry.coordinates as [number, number][];
-  const routePoints = routeCoords.map(([lng, lat]) => ({ lat, lng }));
+export function stopRouteAnimation(order_id: number): void {
+  try {
+    stopRoute(order_id);
+    console.log(`Route animation stopped for order: ${order_id}`);
+  } catch (error) {
+    console.error(`Error stopping route ${order_id}:`, error);
+    throw new Error(`Failed to stop route ${order_id}`);
+  }
+}
 
-  // Интерполируем точки маршрута с шагом 5 метров
-  const smoothRoutePoints = interpolateRoutePoints(routePoints, 5);
-
-  // Рассылаем маршрут всем подключенным WS клиентам
-  wss.clients.forEach((client) => {
+// Вспомогательная функция для получения списка активных маршрутов
+export function getActiveRoutes(): number[] {
+  return Array.from(wss.clients).reduce((acc: number[], client) => {
     const ws = client as WSClient;
-
-    // Очищаем старую анимацию
-    if (ws.routeTask?.intervalId) clearInterval(ws.routeTask.intervalId);
-
-    let index = 0;
-    const intervalId = setInterval(() => {
-      if (index >= smoothRoutePoints.length) {
-        clearInterval(intervalId);
-        ws.routeTask = undefined;
-        return;
+    ws.routeTasks?.forEach((_, orderId) => {
+      if (!acc.includes(orderId)) {
+        acc.push(orderId);
       }
-      ws.send(JSON.stringify([order_id, smoothRoutePoints[index]]));
-      index++;
-    }, 200);
-
-    ws.routeTask = { points: smoothRoutePoints, index, intervalId };
-  });
+    });
+    return acc;
+  }, []);
 }
