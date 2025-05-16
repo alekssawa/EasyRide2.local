@@ -163,6 +163,7 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
       ],
       createMarker: () => null,
       addWaypoints: false,
+      addToMap: false,
       draggableWaypoints: false,
       fitSelectedRoutes: false,
       show: false,
@@ -178,7 +179,7 @@ const DriverRoutingMap = ({ driver, from, to, orderID }: MapProps) => {
       }
     } as unknown as L.Routing.RoutingControlOptions);
 
-    routingControl.addTo(map);
+    // routingControl.addTo(map);
 
     routingControl.on('routesfound', (e) => {
       const event = e as { routes: ExtendedRoute[] };
