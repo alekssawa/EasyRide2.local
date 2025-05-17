@@ -113,8 +113,10 @@ const Profile = () => {
   const [userInfo, setUserInfo] = useState<Client | Driver | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(true); // Состояние для контроля показа скелетона
-  const { user, loading: authLoading } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -143,12 +145,21 @@ const Profile = () => {
           );
         }
 
-        if (response && response.ok) {
-          const data = await response.json();
-          setUserInfo(data);
-        } else {
-          console.error("Пользователь не найден");
-          setUserInfo(null);
+        if (response) {
+          if (response.status === 401) {
+            // Если неавторизован, редирект на главную
+            navigate("/");
+            logout();
+            return;
+          }
+
+          if (response.ok) {
+            const data = await response.json();
+            setUserInfo(data);
+          } else {
+            console.error("Пользователь не найден");
+            setUserInfo(null);
+          }
         }
       } catch (error) {
         console.error("Ошибка при получении данных пользователя:", error);

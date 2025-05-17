@@ -19,6 +19,7 @@ interface AuthProviderProps {
 
 interface AuthContextType {
   user: UserData;
+  logout: () => Promise<void>;
   setUser: React.Dispatch<React.SetStateAction<UserData>>;
   loading: boolean;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -108,6 +109,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }));
   };
 
+  const logout = async () => {
+    try {
+      await fetch("http://localhost:5000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setUser({
+        authenticated: false,
+        userId: null,
+        email: null,
+        name: null,
+        picture: null,
+        googleId: null,
+        password: null,
+        role: null,
+      });
+    }
+  };
+
   useEffect(() => {
     fetchUserData();
   }, []);
@@ -116,6 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     <AuthContext.Provider 
       value={{ 
         user, 
+        logout,
         setUser, 
         loading,
         setLoading, 

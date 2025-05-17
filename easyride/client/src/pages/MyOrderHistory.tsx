@@ -38,7 +38,7 @@ const formatLocation = (loc: string): string => {
 };
 
 const MyOrderHistory = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -55,8 +55,12 @@ const MyOrderHistory = () => {
           `http://localhost:5000/api/history/${user.role}/${user.userId}`,
           { credentials: "include" }
         );
-
-        if (res.status === 404) {
+        
+        if (res.status === 401) {
+          navigate("/");
+          logout();
+          return;
+        } else if (res.status === 404) {
           setOrders([]);
         } else if (!res.ok) {
           throw new Error("Ошибка при получении заказов");

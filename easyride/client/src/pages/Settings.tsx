@@ -2,18 +2,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../context/authContext";
+import { useNavigate } from "react-router-dom";
 import defaultAvatar from "../assets/img/default-avatar.png";
 
 import { ToastContainer, toast } from "react-toastify";
 
 const Settings = () => {
-  const { user, refreshUser, updateUserAvatar } = useAuth();
+  const { user, logout, refreshUser, updateUserAvatar } = useAuth();
+  const navigate = useNavigate();
   const [avatar, setAvatar] = useState<string>(user.picture || defaultAvatar);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [oldAvatarKey, setOldAvatarKey] = useState<string | null>(null);
 
-  // Извлекаем ключ из URL аватарки при загрузке
   useEffect(() => {
     if (user.picture) {
       setAvatar(user.picture);
@@ -26,6 +27,10 @@ const Settings = () => {
       }
     }
   }, [user.picture]);
+
+  if (!user.authenticated) {
+    navigate("/");
+  }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -64,6 +69,12 @@ const Settings = () => {
         }
       );
 
+      if (presignedResponse.status === 401) {
+        navigate("/");
+        logout();
+        return;
+      }
+
       const { presignedUrl, key, publicUrl } = presignedResponse.data;
 
       await axios.put(presignedUrl, file, {
@@ -81,6 +92,12 @@ const Settings = () => {
         },
         { withCredentials: true }
       );
+
+      if (updateResponse.status === 401) {
+        navigate("/");
+        logout();
+        return;
+      }
 
       console.log(updateResponse);
       updateUserAvatar(publicUrl);
@@ -109,6 +126,12 @@ const Settings = () => {
         `http://localhost:5000/api/${user.role}/${user.userId}/avatar`,
         { withCredentials: true }
       );
+
+      if (response.status === 401) {
+        navigate("/");
+        logout();
+        return;
+      }
 
       console.log(response);
 

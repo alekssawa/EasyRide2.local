@@ -1,9 +1,13 @@
 import axios from "axios";
-import { wss, getActiveRoute, setActiveRoute, startRouteForClient, stopRoute, WSClient } from "../ws/wsServer.ts";
+import { wss, getActiveRoute, setActiveRoute, startRouteForClient, stopRoute, WSClient, updateSimulationSettings, getSimulationSettings } from "../ws/wsServer.ts";
 
 interface Point {
   lat: number;
   lng: number;
+}
+interface SimulationSettings {
+  isDriving: boolean;
+  speed: number;
 }
 
 // Функция для расчёта расстояния между двумя точками (метры)
@@ -122,4 +126,21 @@ export function getActiveRoutes(): number[] {
     });
     return acc;
   }, []);
+}
+
+export async function updateRouteSimulation(
+  order_id: number,
+  settings: Partial<SimulationSettings>
+): Promise<void> {
+  try {
+    updateSimulationSettings(order_id, settings);
+    console.log(`Simulation settings updated for order ${order_id}:`, settings);
+  } catch (error) {
+    console.error(`Error updating simulation ${order_id}:`, error);
+    throw new Error(`Failed to update simulation ${order_id}`);
+  }
+}
+
+export function getRouteSimulationSettings(order_id: number): SimulationSettings | undefined {
+  return getSimulationSettings(order_id);
 }

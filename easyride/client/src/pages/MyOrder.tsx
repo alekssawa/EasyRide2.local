@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/authContext";
 // import { useRoute } from "../context/routeContext";
 import { useNavigate } from "react-router-dom";
@@ -45,18 +45,30 @@ const formatLocation = (loc: string): string => {
 };
 
 const MyOrder: React.FC = () => {
-  const { user } = useAuth();
-  console.log(user)
-  // const { orderId, setOrderId } = useRoute();
+  const { user, logout } = useAuth();
   const [location, setLocation] = useState<OrderLocation | null>(null);
-  // console.log(orderId);
-  // console.log(location);
-
-  // console.log([GnearestDriver, fromGSuggestions, toGSuggestions]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRouteCompleted, setIsRouteCompleted] = useState(false);
 
   const navigate = useNavigate();
+
+  const checkUnauthorized = async (response: Response) => {
+    if (response.status === 401) {
+      await logout();
+      navigate("/");
+      return true;
+    }
+    return false;
+  };
+
+  const handleRouteCompleted = useCallback(() => {
+    if (!isRouteCompleted) {
+      setIsRouteCompleted(true);
+      toast.success("Маршрут завершен!");
+      // fetchOrders();
+    }
+  }, [isRouteCompleted]);
 
   useEffect(() => {
     if (!user.authenticated) navigate("/");
@@ -72,9 +84,10 @@ const MyOrder: React.FC = () => {
         }
       );
 
+      if (await checkUnauthorized(response)) return;
+
       if (!response.ok) throw new Error("Не удалось отменить заказ");
 
-      // Можно обновить список заказов или показать сообщение
       console.log("Поїздку скасовано", { orderId });
       toast.success("Поїздку скасовано");
       await fetchOrders(); // <-- Обновляем заказы после отмены
@@ -93,9 +106,10 @@ const MyOrder: React.FC = () => {
         }
       );
 
+      if (await checkUnauthorized(response)) return;
+
       if (!response.ok) throw new Error("Не удалось завершить заказ");
 
-      // console.log("Поїздка завершена");
       toast.success("Поїздка завершена");
       await fetchOrders();
     } catch (error) {
@@ -116,6 +130,8 @@ const MyOrder: React.FC = () => {
         { method: "GET", credentials: "include" }
       );
 
+      if (await checkUnauthorized(res)) return;
+
       if (res.status === 404) {
         setOrders([]);
       } else if (!res.ok) {
@@ -130,6 +146,8 @@ const MyOrder: React.FC = () => {
               `http://localhost:5000/api/order-locations/${data[0].id}`,
               { credentials: "include" }
             );
+
+            if (await checkUnauthorized(response)) return;
 
             if (!response.ok) {
               throw new Error(`Ошибка: ${response.status}`);
@@ -149,7 +167,7 @@ const MyOrder: React.FC = () => {
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                    order_id: data[0].id,
+                    order_id: Number(data[0].id),
                     driver: {
                       lat: locationData.driver_latitude,
                       lng: locationData.driver_longitude,
@@ -165,6 +183,8 @@ const MyOrder: React.FC = () => {
                   }),
                 }
               );
+
+              if (await checkUnauthorized(routeResponse)) return;
 
               if (!routeResponse.ok) {
                 throw new Error(`Ошибка: ${routeResponse.status}`);
@@ -206,9 +226,6 @@ const MyOrder: React.FC = () => {
       </p>
     );
 
-  {
-    /* FIXME: Сделать растояние и цену в отдельном боредере сверху */
-  }
   return (
     <>
       <div className="w-[500px] h-[500px] border-2 border-green-500 mx-auto mt-[90px]">
@@ -226,6 +243,7 @@ const MyOrder: React.FC = () => {
             lat: location?.destination_latitude ?? 0,
             lng: location?.destination_longitude ?? 0,
           }}
+          onRouteCompleted={handleRouteCompleted}
         />
       </div>
       <div className="orders-list">
