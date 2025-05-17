@@ -166,14 +166,14 @@ export const checkAuth = async (req: Request, res: Response): Promise<void> => {
 
     // Сначала проверяем в clients
     let result = await pool.query(
-      "SELECT client_id AS id, client_email AS email, 'client' AS role, client_avatar_url FROM clients WHERE client_email = $1",
+      "SELECT client_id AS id, client_email AS email, 'client' AS role, client_avatar_url AS avatar_url FROM clients WHERE client_email = $1",
       [user.email]
     );
 
     // Если не найдено — проверяем в drivers
     if (result.rowCount === 0) {
       result = await pool.query(
-        "SELECT driver_id AS id, driver_email AS email, 'driver' AS role FROM drivers WHERE driver_email = $1",
+        "SELECT driver_id AS id, driver_email AS email, 'driver' AS role, driver_avatar_url AS avatar_url FROM drivers WHERE driver_email = $1",
         [user.email]
       );
 
@@ -187,7 +187,7 @@ export const checkAuth = async (req: Request, res: Response): Promise<void> => {
       }
     }
     // console.log(result.rows[0])
-    const { id, role, client_avatar_url } = result.rows[0];
+    const { id, role, avatar_url } = result.rows[0];
     // console.log(id,role,client_avatar_url);
 
     res.json({
@@ -196,7 +196,7 @@ export const checkAuth = async (req: Request, res: Response): Promise<void> => {
       googleId: user.googleId,
       email: user.email,
       name: user.name,
-      picture: client_avatar_url,
+      picture: avatar_url,
       role, // client или driver
     });
   } catch (error) {

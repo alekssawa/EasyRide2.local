@@ -18,6 +18,8 @@ interface Driver {
   driver_phone_number: string;
   driver_email: string;
   driver_role: string;
+  driver_avatar_url: string;
+
   car_model: string;
   car_model_year: string;
   car_registration_plate: string;
@@ -37,17 +39,19 @@ const ProfileSkeleton = () => {
       }
     >
       <h2 className="text-2xl font-semibold mb-6">Детали профиля</h2>
-  
-      <div className={
-        user.role === "client"
-          ? "flex justify-center items-center gap-6 border rounded-lg p-6 w-full max-w-[651.9px] h-[177.6px]"
-          : "flex justify-center items-center gap-6 border rounded-lg p-6 w-full max-w-[651.9px] h-[189.6px]"
-      }>
+
+      <div
+        className={
+          user.role === "client"
+            ? "flex justify-center items-center gap-6 border rounded-lg p-6 w-full max-w-[651.9px] h-[177.6px]"
+            : "flex justify-center items-center gap-6 border rounded-lg p-6 w-full max-w-[651.9px] h-[189.6px]"
+        }
+      >
         <div className="w-32 h-32 bg-gray-200 rounded-full animate-pulse"></div>
-  
+
         <div className="flex-1 space-y-4">
           <h3 className="text-xl font-bold bg-gray-200 h-6 rounded w-75 animate-pulse mx-auto text-center"></h3>
-  
+
           <div
             className={
               user.role === "client"
@@ -67,18 +71,18 @@ const ProfileSkeleton = () => {
                 </div>
               </div>
             )}
-  
+
             {/* Общие данные для всех пользователей */}
             <div className="text-left">
               <p className="font-medium text-gray-500">Номер телефона</p>
               <p className="bg-gray-200 h-5 rounded w-28 animate-pulse text-left"></p>
             </div>
-  
+
             <div className="text-left">
               <p className="font-medium text-gray-500">Электронная почта</p>
               <p className="bg-gray-200 h-5 rounded w-36 animate-pulse text-left"></p>
             </div>
-  
+
             {/* Условие для рендеринга данных, относящихся к водителям */}
             {user.role === "driver" && (
               <>
@@ -86,12 +90,12 @@ const ProfileSkeleton = () => {
                   <p className="font-medium text-gray-500">Модель автомобиля</p>
                   <p className="bg-gray-200 h-5 rounded w-32 animate-pulse text-left"></p>
                 </div>
-  
+
                 <div className="text-left">
                   <p className="font-medium text-gray-500">Номерной знак</p>
                   <p className="bg-gray-200 h-5 rounded w-32 animate-pulse text-left"></p>
                 </div>
-  
+
                 <div className="text-left">
                   <p className="font-medium text-gray-500">Тариф</p>
                   <p className="bg-gray-200 h-5 rounded w-20 animate-pulse text-left"></p>
@@ -103,7 +107,6 @@ const ProfileSkeleton = () => {
       </div>
     </div>
   );
-  
 };
 
 const Profile = () => {
@@ -192,7 +195,11 @@ const Profile = () => {
       <h2 className="text-2xl font-semibold mb-6">Детали профиля</h2>
       <div className=" max-w-full flex items-center gap-6 border rounded-lg p-6">
         <img
-          src={(userInfo as Client)?.client_avatar_url || defaultAvatar}
+          src={
+            isClient
+              ? (userInfo as Client)?.client_avatar_url || defaultAvatar
+              : (userInfo as Driver)?.driver_avatar_url || defaultAvatar
+          }
           alt="Profile"
           className="w-32 h-32 object-cover rounded-full m-0 p-0"
         />
