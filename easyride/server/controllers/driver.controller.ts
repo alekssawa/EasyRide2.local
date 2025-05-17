@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import pool from "../lib/db.js";
 import bcrypt from "bcrypt";
 
+import { generatePresignedUrl, deleteFileFromS3, extractKeyFromUrl }  from "../lib/s3Config.ts";
+
 export const getDrivers = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await pool.query("SELECT * FROM drivers");

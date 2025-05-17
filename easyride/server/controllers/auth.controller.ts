@@ -162,9 +162,11 @@ export const checkAuth = async (req: Request, res: Response): Promise<void> => {
 
     const user = req.session.user;
 
+    // console.log(user)
+
     // Сначала проверяем в clients
     let result = await pool.query(
-      "SELECT client_id AS id, client_email AS email, 'client' AS role FROM clients WHERE client_email = $1",
+      "SELECT client_id AS id, client_email AS email, 'client' AS role, client_avatar_url FROM clients WHERE client_email = $1",
       [user.email]
     );
 
@@ -184,9 +186,9 @@ export const checkAuth = async (req: Request, res: Response): Promise<void> => {
         return;
       }
     }
-
-    const { id, role } = result.rows[0];
-    // console.log(id,role);
+    // console.log(result.rows[0])
+    const { id, role, client_avatar_url } = result.rows[0];
+    // console.log(id,role,client_avatar_url);
 
     res.json({
       authenticated: true,
@@ -194,7 +196,7 @@ export const checkAuth = async (req: Request, res: Response): Promise<void> => {
       googleId: user.googleId,
       email: user.email,
       name: user.name,
-      picture: user.picture,
+      picture: client_avatar_url,
       role, // client или driver
     });
   } catch (error) {

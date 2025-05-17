@@ -46,6 +46,7 @@ const formatLocation = (loc: string): string => {
 
 const MyOrder: React.FC = () => {
   const { user } = useAuth();
+  console.log(user)
   // const { orderId, setOrderId } = useRoute();
   const [location, setLocation] = useState<OrderLocation | null>(null);
   // console.log(orderId);

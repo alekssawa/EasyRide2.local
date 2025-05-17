@@ -3,13 +3,14 @@ import { useAuth } from "../context/authContext";
 import "../styles/Profile.css";
 import { useNavigate } from "react-router-dom";
 
-import avatarDriver from "../assets/img/avatar_driver.jpg";
+import defaultAvatar from "../assets/img/default-avatar.png";
 
 interface Client {
   client_p_i_b: string;
   client_phone_number: string;
   client_email: string;
   client_role: string;
+  client_avatar_url: string;
 }
 
 interface Driver {
@@ -191,7 +192,7 @@ const Profile = () => {
       <h2 className="text-2xl font-semibold mb-6">Детали профиля</h2>
       <div className=" max-w-full flex items-center gap-6 border rounded-lg p-6">
         <img
-          src={avatarDriver}
+          src={(userInfo as Client)?.client_avatar_url || defaultAvatar}
           alt="Profile"
           className="w-32 h-32 object-cover rounded-full m-0 p-0"
         />
