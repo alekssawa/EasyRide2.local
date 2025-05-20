@@ -40,7 +40,6 @@ interface OrderLocation {
 }
 
 const formatLocation = (loc: string): string => {
-  // Заменяем все дефисы на пробелы
   return loc.replace(/-/g, " ");
 };
 
@@ -49,7 +48,7 @@ const MyOrder: React.FC = () => {
   const [location, setLocation] = useState<OrderLocation | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isRouteCompleted, setIsRouteCompleted] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
   const navigate = useNavigate();
 
@@ -62,13 +61,20 @@ const MyOrder: React.FC = () => {
     return false;
   };
 
+  useEffect(() =>{
+    // console.log(isButtonDisabled)
+  }, [isButtonDisabled, setIsButtonDisabled])
+
+  const enableCompleteRideButton = () => {
+    console.log("enableCompleteRideButton1")
+    setIsButtonDisabled(false);
+    console.log("enableCompleteRideButton2")
+  };
+
   const handleRouteCompleted = useCallback(() => {
-    if (!isRouteCompleted) {
-      setIsRouteCompleted(true);
-      toast.success("Маршрут завершен!");
-      // fetchOrders();
-    }
-  }, [isRouteCompleted]);
+    fetchOrders();
+    toast.success("Поїздка завершена!");
+  }, []);
 
   useEffect(() => {
     if (!user.authenticated) navigate("/");
@@ -110,8 +116,8 @@ const MyOrder: React.FC = () => {
 
       if (!response.ok) throw new Error("Не удалось завершить заказ");
 
-      toast.success("Поїздка завершена");
-      await fetchOrders();
+      // toast.success("Поїздка завершена");
+      // await fetchOrders();
     } catch (error) {
       console.error("Ошибка при завершении заказа:", error);
       toast.error("Помилка при завершенні замовлення");
@@ -243,6 +249,7 @@ const MyOrder: React.FC = () => {
             lat: location?.destination_latitude ?? 0,
             lng: location?.destination_longitude ?? 0,
           }}
+          onWaitingDriverFinish={enableCompleteRideButton}
           onRouteCompleted={handleRouteCompleted}
         />
       </div>
@@ -374,7 +381,7 @@ const MyOrder: React.FC = () => {
                   <div className="flex justify-between">
                     <div className="flex flex-col w-full">
                       <button
-                        className="w-full bg-gray-700 text-white py-3 rounded-lg text-sm hover:bg-gray-600 transition-all"
+                        className="w-full bg-gray-700 font-medium text-white py-3 rounded-lg text-sm hover:bg-gray-600 transition-all"
                         type="button"
                         onClick={() => handleCancel(order.id)}
                       >
@@ -386,7 +393,7 @@ const MyOrder: React.FC = () => {
                   <div className="flex justify-between">
                     <div className="flex flex-col w-full mr-2">
                       <button
-                        className="w-full bg-gray-700 text-white py-3 rounded-lg text-sm hover:bg-gray-600 transition-all"
+                        className="w-full bg-gray-700 font-medium text-white py-3 rounded-lg text-sm hover:bg-gray-600 transition-all"
                         type="button"
                         onClick={() => handleCancel(order.id)}
                       >
@@ -394,12 +401,16 @@ const MyOrder: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* TODO: Сделать логику завершение поездки, payment type перенести в таблицу payments */}
                     <div className="flex flex-col w-full">
                       <button
-                        className="w-full bg-gray-700 text-white py-3 rounded-lg text-sm hover:bg-gray-600 transition-all"
+                        className={`w-full py-3 rounded-lg font-medium text-sm transition-all ${
+                          isButtonDisabled
+                            ? "bg-gray-400 text-white cursor-not-allowed"
+                            : "bg-gray-700 text-white hover:bg-gray-600"
+                        }`}
                         type="button"
                         onClick={() => handleComplete(order.id)}
+                        disabled={isButtonDisabled}
                       >
                         Завершить поездку
                       </button>

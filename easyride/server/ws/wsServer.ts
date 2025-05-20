@@ -10,8 +10,10 @@ export interface WSClient extends WebSocket {
       index: number;
       intervalId: NodeJS.Timeout | null;
       lastUpdateTime?: number;
+      isCompleted?: boolean;
     }
   >;
+  subscribedOrders?: number[];
 }
 
 export interface SimulationSettings {
@@ -80,7 +82,6 @@ export function startRouteForClient(
     return;
   }
 
-  // Используем переданный startIndex или текущий индекс маршрута
   const actualStartIndex = Math.max(startIndex, route.currentIndex);
   let index = actualStartIndex;
   let lastUpdateTime = Date.now();
@@ -121,30 +122,28 @@ export function startRouteForClient(
     }
 
     if (index >= points.length - 1) {
+      // Останавливаем движение, но сохраняем routeTasks
       clearInterval(intervalId);
-      ws.routeTasks?.delete(orderId);
-      route.settings.isDriving = false;
-
-      // Отправляем сообщение о завершении маршрута
-      ws.send(
-        JSON.stringify({
-          type: "route_completed",
-          orderId,
-          completed: true,
-          timestamp: Date.now(),
-        })
-      );
-
-      if (
-        Array.from(wss.clients).every(
-          (client) => !(client as WSClient).routeTasks?.has(orderId)
-        )
-      ) {
-        activeRoutes.delete(orderId);
+      
+      // Обновляем задачу - помечаем как завершенную
+      const task = ws.routeTasks?.get(orderId);
+      if (task) {
+        task.intervalId = null;
+        task.isCompleted = true;
       }
+
+      // Отправляем уведомление о завершении маршрута
+      notifyClientsByOrderId(orderId, {
+        type: "waiting_driver_finish",
+        orderId,
+      });
+
+      // Останавливаем движение в настройках
+      route.settings.isDriving = false;
+      
       return;
     }
-
+    
     ws.send(JSON.stringify([orderId, points[index]]));
     route.currentIndex = index;
   }, 50);
@@ -157,7 +156,15 @@ export function startRouteForClient(
     index,
     intervalId,
     lastUpdateTime,
+    isCompleted: false // Добавляем флаг завершения
   });
+
+  if (!ws.subscribedOrders) {
+    ws.subscribedOrders = [];
+  }
+  if (!ws.subscribedOrders.includes(orderId)) {
+    ws.subscribedOrders.push(orderId);
+  }
 }
 
 // Функция для расчета расстояния между точками
@@ -230,11 +237,9 @@ wss.on("connection", (ws: WSClient) => {
     }
   });
 
-  // Для нового клиента продолжаем все активные маршруты
-  // с их текущей позиции
-  activeRoutes.forEach((route, orderId) => {
-    startRouteForClient(ws, orderId, route.points, route.currentIndex);
-  });
+  // activeRoutes.forEach((route, orderId) => {
+  //   startRouteForClient(ws, orderId, route.points, route.currentIndex);
+  // });
 
   ws.on("close", () => {
     console.log("WS client disconnected");
@@ -285,4 +290,115 @@ export function stopRoute(orderId: number) {
 
 export function getActiveRoutes(): number[] {
   return Array.from(activeRoutes.keys());
+}
+
+export function notifyDriverCompletedRide(orderId: number) {
+  // Отправляем уведомление клиентам
+  notifyClientsByOrderId(orderId, { type: "driver_completed_ride", orderId });
+
+  // Очищаем данные у всех клиентов
+  wss.clients.forEach((client) => {
+    const ws = client as WSClient;
+    const task = ws.routeTasks?.get(orderId);
+    if (task) {
+      if (task.intervalId) clearInterval(task.intervalId);
+      ws.routeTasks?.delete(orderId);
+    }
+    
+    if (ws.subscribedOrders) {
+      ws.subscribedOrders = ws.subscribedOrders.filter(id => id !== orderId);
+    }
+  });
+
+  // Удаляем маршрут из активных
+  activeRoutes.delete(orderId);
+}
+
+// function notifyClientsByOrderId(orderId: number, message: any) {
+//   const allClients = Array.from(wss.clients).map((client) => {
+//     const wsClient = client as WSClient;
+//     const socket = (wsClient as any)._socket;
+//     return {
+//       id: socket ? socket.remoteAddress + ":" + socket.remotePort : "unknown",
+//       readyState: client.readyState,
+//       subscribedOrders: wsClient.routeTasks
+//         ? Array.from(wsClient.routeTasks.keys())
+//         : [],
+//     };
+//   });
+
+//   console.log("Все клиенты на сокете:", allClients);
+
+//   const subscribedClients = allClients.filter((c) =>
+//     c.subscribedOrders.includes(orderId)
+//   );
+
+//   console.log(`Клиенты, подписанные на orderId=${orderId}:`, subscribedClients);
+
+//   wss.clients.forEach((client) => {
+//     const wsClient = client as WSClient;
+//     if (
+//       client.readyState === WebSocket.OPEN &&
+//       wsClient.routeTasks?.has(orderId)
+//     ) {
+//       client.send(JSON.stringify(message));
+//     }
+//   });
+// }
+
+function notifyClientsByOrderId(orderId: number, message: any) {
+
+    const allClients = Array.from(wss.clients).map((client) => {
+    const wsClient = client as WSClient;
+    const socket = (wsClient as any)._socket;
+    return {
+      id: socket ? socket.remoteAddress + ":" + socket.remotePort : "unknown",
+      readyState: client.readyState,
+      subscribedOrders: wsClient.routeTasks
+        ? Array.from(wsClient.routeTasks.keys())
+        : [],
+    };
+  });
+
+  console.log("Все клиенты на сокете:", allClients);
+
+  const subscribedClients = allClients.filter((c) =>
+    c.subscribedOrders.includes(orderId)
+  );
+
+  console.log(`Клиенты, подписанные на orderId=${orderId}:`, subscribedClients);
+  wss.clients.forEach((client) => {
+    const wsClient = client as WSClient;
+    if (
+      client.readyState === WebSocket.OPEN &&
+      wsClient.subscribedOrders?.includes(orderId)
+    ) {
+      client.send(JSON.stringify(message));
+    }
+  });
+}
+
+export function AllClients() {
+  const orderId = 170;
+  const allClients = Array.from(wss.clients).map((client) => {
+    const wsClient = client as WSClient;
+    const socket = (wsClient as any)._socket;
+    return {
+      id: socket ? socket.remoteAddress + ":" + socket.remotePort : "unknown",
+      readyState: client.readyState,
+      subscribedOrders: wsClient.routeTasks
+        ? Array.from(wsClient.routeTasks.keys())
+        : [],
+    };
+  });
+
+  const subscribedClients = allClients.filter((c) =>
+    c.subscribedOrders.includes(orderId)
+  );
+  
+
+  return {
+    allClients,
+    subscribedClients,
+  };
 }

@@ -4,6 +4,7 @@ import {
   stopRouteAnimation,   
   getActiveRoutes,
   updateRouteSimulation,
+  AllClientsView,
   getRouteSimulationSettings } from "../services/route.service.ts";
 
 const router = express.Router();
@@ -94,5 +95,8 @@ router.delete("/route/:order_id", async (req, res) => {
     });
   }
 });
+
+router.get("/route/AllClientsView", AllClientsView);
+
 
 export default router;

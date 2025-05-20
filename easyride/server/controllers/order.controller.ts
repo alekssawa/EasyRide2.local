@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import pool from "../lib/db.js";
+import { notifyDriverCompletedRide, AllClients } from "../ws/wsServer.ts";
 
 export const getOrdersByClientId = async (
   req: Request,
@@ -263,7 +264,13 @@ export const createOrder = async (
     } else {
       const tempCost = distance - 2;
       amount =
-        Math.round((tempCost * parseFloat(tariffResult.rows[0].tariff_cost_for_additional_km) + parseFloat(tariffResult.rows[0].tariff_cost_for_basic_2km)) * 2 * 10 ) / 10;
+        Math.round(
+          (tempCost *
+            parseFloat(tariffResult.rows[0].tariff_cost_for_additional_km) +
+            parseFloat(tariffResult.rows[0].tariff_cost_for_basic_2km)) *
+            2 *
+            10
+        ) / 10;
     }
 
     // console.log(amount);
@@ -379,7 +386,6 @@ export const cancelOrder = async (
   }
 };
 
-
 export const completeOrder = async (
   req: Request,
   res: Response
@@ -387,10 +393,8 @@ export const completeOrder = async (
   const { orderId } = req.params;
 
   try {
-    // Начинаем транзакцию, чтобы все изменения прошли в одном блоке
     await pool.query("BEGIN");
 
-    // 1. Обновляем статус заказа
     const result = await pool.query(
       `
       UPDATE orders
@@ -408,16 +412,15 @@ export const completeOrder = async (
 
     const order = result.rows[0];
 
-    // Проверка на наличие значений в необходимых полях
     const {
-      order_client_id,          // Вместо trip_client_id
-      order_driver_id,          // Вместо trip_driver_id
-      order_tariff_id,          // Вместо trip_tariff_id
-      order_payment_id,         // Вместо trip_payment_id
-      order_order_time,         // Вместо trip_start_time
-      order_client_start_location, // Вместо trip_client_start_location
-      order_client_destination,    // Вместо trip_client_destination
-      order_distance,           // Вместо trip_distance
+      order_client_id,
+      order_driver_id,
+      order_tariff_id,
+      order_payment_id,
+      order_order_time,
+      order_client_start_location,
+      order_client_destination,
+      order_distance,
     } = order;
 
     if (
@@ -436,7 +439,6 @@ export const completeOrder = async (
       return;
     }
 
-    // 2. Переносим данные из заказа в triphistory
     await pool.query(
       `
       INSERT INTO triphistory (
@@ -456,20 +458,20 @@ export const completeOrder = async (
         order_driver_id,
         order_tariff_id,
         order_payment_id,
-        order_order_time,  // это начало поездки
-        new Date(),        // предполагаем, что текущая дата — это конец поездки
+        order_order_time,
+        new Date(),
         order_client_start_location,
         order_client_destination,
         order_distance,
       ]
     );
 
-    // 3. Завершаем транзакцию
     await pool.query("COMMIT");
+
+    notifyDriverCompletedRide(Number(orderId));
 
     res.status(200).json({ message: "Order completed" });
   } catch (err: any) {
-    // Если произошла ошибка, откатываем транзакцию
     await pool.query("ROLLBACK");
     res.status(500).json({ error: err.message });
   }

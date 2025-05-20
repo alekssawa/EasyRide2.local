@@ -1,5 +1,16 @@
 import axios from "axios";
-import { wss, getActiveRoute, setActiveRoute, startRouteForClient, stopRoute, WSClient, updateSimulationSettings, getSimulationSettings } from "../ws/wsServer.ts";
+import { Request, Response } from "express";
+import {
+  wss,
+  getActiveRoute,
+  setActiveRoute,
+  startRouteForClient,
+  stopRoute,
+  WSClient,
+  updateSimulationSettings,
+  getSimulationSettings,
+  AllClients,
+} from "../ws/wsServer.ts";
 
 interface Point {
   lat: number;
@@ -35,7 +46,10 @@ function interpolatePoint(p1: Point, p2: Point, fraction: number): Point {
 }
 
 // Функция для интерполяции всего маршрута с шагом stepMeters (в метрах)
-function interpolateRoutePoints(points: Point[], stepMeters: number = 5): Point[] {
+function interpolateRoutePoints(
+  points: Point[],
+  stepMeters: number = 5
+): Point[] {
   const result: Point[] = [];
 
   for (let i = 0; i < points.length - 1; i++) {
@@ -72,9 +86,7 @@ export async function startRouteAnimation(
   }
 
   // Формируем координаты для OSRM (lng,lat)
-  const coords = [driver, from, to]
-    .map((c) => `${c.lng},${c.lat}`)
-    .join(";");
+  const coords = [driver, from, to].map((c) => `${c.lng},${c.lat}`).join(";");
 
   const url = `http://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
 
@@ -86,18 +98,46 @@ export async function startRouteAnimation(
       throw new Error("Route not found");
     }
 
-    const routeCoords = res.data.routes[0].geometry.coordinates as [number, number][];
+    const routeCoords = res.data.routes[0].geometry.coordinates as [
+      number,
+      number
+    ][];
     const routePoints = routeCoords.map(([lng, lat]) => ({ lat, lng }));
 
-    // Интерполируем точки маршрута с шагом 5 метров
     const smoothRoutePoints = interpolateRoutePoints(routePoints, 5);
 
-    // Устанавливаем новый активный маршрут
     setActiveRoute(order_id, smoothRoutePoints);
 
-    // Запускаем маршрут для всех подключенных клиентов
-    wss.clients.forEach(client => {
-      startRouteForClient(client as WSClient, order_id, smoothRoutePoints);
+    const allClients = Array.from(wss.clients).map((client) => {
+      const wsClient = client as WSClient;
+      const socket = (wsClient as any)._socket;
+      return {
+        id: socket ? socket.remoteAddress + ":" + socket.remotePort : "unknown",
+        readyState: client.readyState,
+        subscribedOrders: wsClient.subscribedOrders ?? [],
+      };
+    });
+
+    console.log("Все клиенты на сокете SERVICE:", allClients);
+
+    const subscribedClients = allClients.filter(
+      (c) => c.subscribedOrders.includes(order_id) // ИСПРАВЛЕНО
+    );
+
+    console.log(
+      `Клиенты SERVICE, подписанные на orderId=${order_id}:`,
+      subscribedClients
+    );
+
+    wss.clients.forEach((client) => {
+      const ws = client as WSClient;
+      const alreadySubscribed = ws.subscribedOrders?.includes(order_id);
+      if (alreadySubscribed) {
+        console.log(`Client already subscribed to ${order_id}`);
+        // return;
+      }
+
+      startRouteForClient(ws, order_id, smoothRoutePoints);
     });
   } catch (error) {
     console.error("Error in route animation:", error);
@@ -141,6 +181,27 @@ export async function updateRouteSimulation(
   }
 }
 
-export function getRouteSimulationSettings(order_id: number): SimulationSettings | undefined {
+export function getRouteSimulationSettings(
+  order_id: number
+): SimulationSettings | undefined {
   return getSimulationSettings(order_id);
 }
+
+export const AllClientsView = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { allClients, subscribedClients } = AllClients();
+
+    res.status(200).json({
+      message: "Все клиенты на сокете",
+      total: allClients.length,
+      subscribed: subscribedClients.length,
+      allClients,
+      subscribedClients,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

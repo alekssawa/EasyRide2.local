@@ -31,6 +31,7 @@ interface MapProps {
   from: Point;
   to: Point;
   orderID: number;
+  onWaitingDriverFinish?: () => void;
   onRouteCompleted?: () => void;
 }
 
@@ -43,6 +44,7 @@ const DriverRoutingMap = ({
   from,
   to,
   orderID,
+  onWaitingDriverFinish,
   onRouteCompleted,
 }: MapProps) => {
   const map = useMap();
@@ -54,14 +56,19 @@ const DriverRoutingMap = ({
 
   const [driverPosition, setDriverPosition] = useState<Point>(driver);
   const [wsInstance, setWsInstance] = useState<WebSocket | null>(null);
-  const [routeStatus, setRouteStatus] = useState<{
-    completed: boolean;
-    completionTime?: number;
-  }>({ completed: false });
+  // const [routeStatus, setRouteStatus] = useState<{
+  //   completed: boolean;
+  //   completionTime?: number;
+  // }>({ completed: false });
+
+  // useEffect(() => {
+  //   console.log(routeStatus);
+  // }, [routeStatus]);
 
   useEffect(() => {
-    console.log(routeStatus);
-  }, [routeStatus]);
+    console.log("onRouteCompleted в эффекте:", onRouteCompleted);
+    // ... остальной код
+  }, [orderID, onRouteCompleted]);
 
   // Анимация движения маркера
   useEffect(() => {
@@ -114,13 +121,34 @@ const DriverRoutingMap = ({
           }
 
           if (data.type === "subscribed") {
+            console.log("Received:", data)
             console.log("Successfully subscribed to order:", data.orderID);
             return;
           }
+          // console.log(orderID,data.orderId)
 
-          if (data.type === "route_completed") {
-            setRouteStatus({ completed: true }); // Убираем временную метку
+          if (data.type === "waiting_driver_finish" && isMounted && Number(data.orderId) === orderID) {
+            console.log("Received:", data)
+            console.log(orderID,data.orderId)
+            // console.log("onWaitingDriverFinish")
+            onWaitingDriverFinish?.()
+            // console.log("onWaitingDriverFinish2")
+          }
+
+          if (data.type === "test" && isMounted && Number(data.orderId) === orderID) {
+            console.log("Received:", data)
+            console.log(orderID,data.orderId)
+            // console.log("test")
+            onWaitingDriverFinish?.()
+            // console.log("test")
+          }
+
+          if (data.type === "driver_completed_ride" /*&& isMounted*/ && Number(data.orderId) === orderID) {
+            console.log("Received:", data)
+            // console.log(orderID,data.orderId)
+            // console.log("onRouteCompleted")
             onRouteCompleted?.();
+            // console.log("onRouteCompleted2")
           }
 
           if (Array.isArray(data) && data.length === 2) {
@@ -164,7 +192,7 @@ const DriverRoutingMap = ({
         setWsInstance(null);
       }
     };
-  }, [orderID, onRouteCompleted]);
+  }, [orderID, onWaitingDriverFinish, onRouteCompleted]);
 
   // Инициализация маршрута и маркеров
   useEffect(() => {
@@ -318,7 +346,14 @@ const DriverRoutingMap = ({
   return null;
 };
 
-const MapWrapper = ({ driver, from, to, orderID }: MapProps) => {
+const MapWrapper = ({
+  driver,
+  from,
+  to,
+  orderID,
+  onWaitingDriverFinish,
+  onRouteCompleted,
+}: MapProps) => {
   return (
     <MapContainer
       center={[from.lat, from.lng]}
@@ -328,7 +363,14 @@ const MapWrapper = ({ driver, from, to, orderID }: MapProps) => {
       zoomControl={false}
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <DriverRoutingMap driver={driver} from={from} to={to} orderID={orderID} />
+      <DriverRoutingMap
+        driver={driver}
+        from={from}
+        to={to}
+        orderID={orderID}
+        onWaitingDriverFinish = {onWaitingDriverFinish}
+        onRouteCompleted={onRouteCompleted}
+      />
     </MapContainer>
   );
 };
